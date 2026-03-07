@@ -72,6 +72,7 @@ export type InvoiceDetails = {
   dueDate?: string;
   Receipt?: string;
   ReceiptNo?: string;
+  ZraQrCode?: string;
   TotalAmount?: number;
   discountPercentage?: number;
   discountAmount?: number;
@@ -440,6 +441,29 @@ const InvoiceDetailsModal: React.FC<Props> = ({
                       {data.Receipt ? "Open Receipt" : "Receipt Not Available"}{" "}
                       <ExternalLink className="w-4 h-4" />
                     </button>
+                  }
+                />
+                <Field
+                  label="ZRA QR Code"
+                  value={
+                    data.ZraQrCode ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.open(
+                            data.ZraQrCode,
+                            "_blank",
+                            "noopener,noreferrer",
+                          );
+                        }}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+                      >
+                        Open ZRA QR Code{" "}
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <span className="text-sm text-muted">QR Code Not Available</span>
+                    )
                   }
                 />
               </div>
