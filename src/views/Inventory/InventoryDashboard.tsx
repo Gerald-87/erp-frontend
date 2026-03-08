@@ -153,6 +153,13 @@ const InventoryDashboard: React.FC = () => {
     [hrCards, salesCards, summaryData],
   );
 
+  const salesIntensityBarData = useMemo(() => {
+    const items = Number(summaryData?.totalItems ?? 0);
+    const invoices = Number(salesCards?.totalSalesInvoices ?? 0);
+    const ratio = items > 0 ? invoices / items : 0;
+    return [{ name: "Invoices / Item", value: Number.isFinite(ratio) ? ratio : 0 }];
+  }, [salesCards, summaryData]);
+
   const chartPlaneStyle = useMemo(
     () => ({
       backgroundImage:
@@ -573,6 +580,70 @@ const InventoryDashboard: React.FC = () => {
                         offset={8}
                         fill="var(--muted)"
                         fontSize={10}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-900">
+                Sales Intensity
+              </h3>
+            </div>
+
+            <div
+              className="h-72 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {crossChartsLoading ? (
+                <ChartSkeleton variant="bar" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={salesIntensityBarData}
+                    margin={{ top: 28, right: 18, left: 6, bottom: 8 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis
+                      tick={{ fontSize: 12 }}
+                      width={52}
+                      tickFormatter={(v) => Number(v ?? 0).toFixed(2)}
+                    />
+                    <Tooltip
+                      formatter={(v: any) => Number(v ?? 0).toFixed(3)}
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      itemStyle={{
+                        color: "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                      cursor={{ fill: "var(--primary)", opacity: 0.1 }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar
+                      dataKey="value"
+                      fill="var(--primary)"
+                      radius={[6, 6, 0, 0]}
+                      name="Invoices per Item"
+                    >
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        offset={8}
+                        fill="var(--muted)"
+                        fontSize={10}
+                        formatter={(v: any) => Number(v ?? 0).toFixed(3)}
                       />
                     </Bar>
                   </BarChart>

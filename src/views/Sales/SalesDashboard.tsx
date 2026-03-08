@@ -245,6 +245,24 @@ const SalesDashboard: React.FC = () => {
     [customerCards, summaryData],
   );
 
+  const recentCustomerShareBarData = useMemo(() => {
+    const rows = Array.isArray(summaryData?.recentSales)
+      ? summaryData!.recentSales
+      : [];
+
+    const totals = new Map<string, number>();
+    for (const r of rows) {
+      const key = String((r as any)?.customer ?? "").trim() || "Unknown";
+      const amt = Number((r as any)?.grand_total ?? 0);
+      totals.set(key, (totals.get(key) ?? 0) + (Number.isFinite(amt) ? amt : 0));
+    }
+
+    return Array.from(totals.entries())
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => Number(b.total) - Number(a.total))
+      .slice(0, 5);
+  }, [summaryData]);
+
   const chartPlaneStyle = useMemo(
     () => ({
       backgroundImage:
@@ -682,6 +700,56 @@ const SalesDashboard: React.FC = () => {
                       ))}
                     </Pie>
                   </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-900">
+                Top Customers (Recent)
+              </h3>
+            </div>
+
+            <div
+              className="h-72 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {chartsLoading ? (
+                <ChartSkeleton variant="bar" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={recentCustomerShareBarData}
+                    margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 11 }}
+                      interval={0}
+                      angle={-18}
+                      textAnchor="end"
+                      height={56}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12 }}
+                      width={52}
+                      tickFormatter={(v) => currencyZMWCompact.format(Number(v))}
+                    />
+                    <Tooltip
+                      formatter={(v: any) => currencyZMW.format(Number(v ?? 0))}
+                      labelFormatter={(label: any) => String(label ?? "")}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar
+                      dataKey="total"
+                      name="Amount"
+                      fill="var(--brand-blue-bottom)"
+                      radius={[2, 2, 0, 0]}
+                    />
+                  </BarChart>
                 </ResponsiveContainer>
               )}
             </div>

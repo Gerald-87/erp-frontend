@@ -152,6 +152,16 @@ const HrDashboard: React.FC = () => {
     ];
   }, [summaryData]);
 
+  const onLeaveRateDonutData = useMemo(() => {
+    const total = Number(summaryData?.total ?? 0);
+    const onLeave = Number(summaryData?.onLeave ?? 0);
+    const notOnLeave = Math.max(0, total - onLeave);
+    return [
+      { name: "On Leave", value: onLeave },
+      { name: "Not On Leave", value: notOnLeave },
+    ];
+  }, [summaryData]);
+
   const totalsVsLeaveTypesData = useMemo(
     () => [
       { name: "Employees", value: Number(summaryData?.total ?? 0) },
@@ -326,6 +336,61 @@ const HrDashboard: React.FC = () => {
                       />
                     </Bar>
                   </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-900">On Leave Rate</h3>
+            </div>
+
+            <div
+              className="h-72 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {chartsLoading ? (
+                <ChartSkeleton variant="pie" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart margin={{ top: 8, right: 12, bottom: 24, left: 12 }}>
+                    <Tooltip
+                      formatter={(v: any) => Number(v ?? 0)}
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      itemStyle={{
+                        color: "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                    />
+                    <Legend {...legendProps} />
+                    <Pie
+                      data={onLeaveRateDonutData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="42%"
+                      innerRadius={58}
+                      outerRadius={88}
+                      paddingAngle={2}
+                      label={renderDonutLabel}
+                      labelLine={false}
+                    >
+                      {onLeaveRateDonutData.map((_, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={idx === 0 ? palette.primary : palette.blueSoft}
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
                 </ResponsiveContainer>
               )}
             </div>

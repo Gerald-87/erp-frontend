@@ -184,6 +184,20 @@ const CRMDashboard: React.FC = () => {
     [cards],
   );
 
+  const customerTypeDonutData = useMemo(
+    () => [
+      {
+        name: "Individual",
+        value: Number(cards?.totalIndividualCustomers ?? 0),
+      },
+      {
+        name: "Company",
+        value: Number(cards?.totalCompanyCustomers ?? 0),
+      },
+    ],
+    [cards],
+  );
+
   const exportDonutData = useMemo(
     () => [
       { name: "Export", value: Number(cards?.exportCustomers ?? 0) },
@@ -323,6 +337,70 @@ const CRMDashboard: React.FC = () => {
                       />
                     </Bar>
                   </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <h3 className="text-sm font-bold text-gray-900">
+                Customer Mix (Donut)
+              </h3>
+            </div>
+
+            <div
+              className="h-72 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {chartsLoading ? (
+                <ChartSkeleton variant="pie" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart margin={{ top: 8, right: 12, bottom: 24, left: 12 }}>
+                    <Tooltip
+                      formatter={(v: any) => Number(v ?? 0)}
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      itemStyle={{
+                        color: "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: 12 }}
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="square"
+                      height={36}
+                    />
+                    <Pie
+                      data={customerTypeDonutData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="42%"
+                      innerRadius={58}
+                      outerRadius={88}
+                      paddingAngle={2}
+                      label={renderDonutLabel}
+                      labelLine={false}
+                    >
+                      {customerTypeDonutData.map((_, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={idx === 0 ? palette.blue : palette.primary}
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
                 </ResponsiveContainer>
               )}
             </div>

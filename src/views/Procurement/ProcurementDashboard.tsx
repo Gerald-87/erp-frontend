@@ -119,15 +119,6 @@ const ProcurementDashboard: React.FC = () => {
     );
   };
 
-  const TableSkeleton = () => (
-    <div className="animate-pulse space-y-3">
-      <div className="h-3 w-28 bg-gray-100 rounded" />
-      <div className="h-3 w-full bg-gray-100 rounded" />
-      <div className="h-3 w-5/6 bg-gray-100 rounded" />
-      <div className="h-3 w-2/3 bg-gray-100 rounded" />
-    </div>
-  );
-
   const kpiCards = useMemo(
     () => [
       {
@@ -201,6 +192,23 @@ const ProcurementDashboard: React.FC = () => {
         name: "Purchase Invoices",
         value: Number(summaryData?.totalPurchaseInvoice ?? 0),
       },
+    ],
+    [summaryData],
+  );
+
+  const supplierOverviewBarData = useMemo(
+    () => [
+      { name: "Total", value: Number(summaryData?.totalSuppliers ?? 0) },
+      { name: "Active", value: Number(summaryData?.activeSuppliers ?? 0) },
+      { name: "Inactive", value: Number(summaryData?.inactiveSuppliers ?? 0) },
+    ],
+    [summaryData],
+  );
+
+  const purchaseDocsBarData = useMemo(
+    () => [
+      { name: "Purchase Orders", value: Number(summaryData?.totalPurchaseOrder ?? 0) },
+      { name: "Purchase Invoices", value: Number(summaryData?.totalPurchaseInvoice ?? 0) },
     ],
     [summaryData],
   );
@@ -348,6 +356,72 @@ const ProcurementDashboard: React.FC = () => {
                       <LabelList
                         dataKey="value"
                         position="top"
+                        fill="#6b7280"
+                        fontSize={10}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-900">
+                Suppliers Overview
+              </h3>
+            </div>
+
+            <div
+              className="h-72 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {chartsLoading ? (
+                <ChartSkeleton variant="bar" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={supplierOverviewBarData}
+                    margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--muted)" }} />
+                    <YAxis tick={{ fontSize: 12, fill: "var(--muted)" }} width={52} />
+                    <Tooltip
+                      formatter={(v: any) => Number(v ?? 0)}
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      itemStyle={{
+                        color: "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                      cursor={{ fill: "var(--primary)", opacity: 0.1 }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Count">
+                      {supplierOverviewBarData.map((_, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={
+                            idx === 0
+                              ? "var(--brand-blue-bottom)"
+                              : idx === 1
+                                ? "var(--primary)"
+                                : "var(--brand-blue-top)"
+                          }
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        offset={8}
                         fill="#6b7280"
                         fontSize={10}
                       />
@@ -551,6 +625,66 @@ const ProcurementDashboard: React.FC = () => {
                       ))}
                     </Pie>
                   </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-900">
+                Purchase Orders vs Invoices
+              </h3>
+            </div>
+
+            <div
+              className="h-72 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {chartsLoading ? (
+                <ChartSkeleton variant="bar" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={purchaseDocsBarData}
+                    margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--muted)" }} />
+                    <YAxis tick={{ fontSize: 12, fill: "var(--muted)" }} width={52} />
+                    <Tooltip
+                      formatter={(v: any) => Number(v ?? 0)}
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      itemStyle={{
+                        color: "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                      cursor={{ fill: "var(--primary)", opacity: 0.1 }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Count">
+                      {purchaseDocsBarData.map((_, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={idx === 0 ? "var(--primary)" : "var(--brand-blue-bottom)"}
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        offset={8}
+                        fill="#6b7280"
+                        fontSize={10}
+                      />
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               )}
             </div>
