@@ -887,7 +887,7 @@ const EmployeeDetailView: React.FC<Props> = ({
                         />
                         <CleanField label="TPIN" value={identityInfo?.TpinId} />
                         <CleanField
-                          label="NAPSA"
+                          label="SSN"
                           value={identityInfo?.SocialSecurityNapsa}
                         />
                         <CleanField

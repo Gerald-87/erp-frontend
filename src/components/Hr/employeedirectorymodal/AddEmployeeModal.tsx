@@ -17,7 +17,7 @@ import {
   createEmployee,
   getEmployeeById,
   updateEmployeeById,
-  updateEmployeeDocuments,
+  updateEmployeeProfilePhoto,
 } from "../../../api/employeeapi";
 import {
   createSalaryStructureAssignment,
@@ -260,15 +260,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     const empId = String(employeeInternalId ?? "").trim();
     if (!empId) return;
 
-    const formData = new FormData();
-    formData.append("employeeId", empId);
-    formData.append("name[0]", "Profile Photo");
-    formData.append("description[0]", "Profile Photo");
-    formData.append("file[0]", profileFile);
-    formData.append("isUpdate", "1");
-    formData.append("isDelete", "0");
-
-    await updateEmployeeDocuments(formData);
+    await updateEmployeeProfilePhoto(empId, profileFile);
   };
 
   // Auto-set salary structure when job title changes
@@ -872,6 +864,17 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
   const buildPayload = () => {
     const basicSalaryNum = Number(formData.basicSalary) || 0;
+    const grossSalaryNum = Number(formData.grossSalary) || 0;
+    const housingAllowanceNum = Number(formData.housingAllowance) || 0;
+    const mealAllowanceNum = Number(formData.mealAllowance) || 0;
+    const transportAllowanceNum = Number(formData.transportAllowance) || 0;
+    const otherAllowancesNum = Number(formData.otherAllowances) || 0;
+
+    const employeeNapsaNum = Number(formData.employeeNapsa) || 0;
+    const employeerNapsaNum = Number(formData.employeerNapsa) || 0;
+    const employeeNhimaNum = Number(formData.employeeNhima) || 0;
+    const employeerNhimaNum = Number(formData.employeerNhima) || 0;
+    const payeNum = Number(formData.payAsYouEarn) || 0;
 
     const payload: any = {
       FirstName: formData.firstName,
@@ -915,6 +918,18 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
       // Salary Structure + Basic Amount
       BasicAmount: basicSalaryNum,
+
+      GrossSalary: grossSalaryNum,
+      HousingAllowance: housingAllowanceNum,
+      MealAllowance: mealAllowanceNum,
+      TransportAllowance: transportAllowanceNum,
+      otherAllowances: otherAllowancesNum,
+
+      EmployeeNapsa: employeeNapsaNum,
+      EmployeerNapsa: employeerNapsaNum,
+      EmployeeNhima: employeeNhimaNum,
+      EmployeerNhima: employeerNhimaNum,
+      PayAsYouEarn: payeNum,
 
       currency: formData.currency,
       PaymentFrequency: formData.paymentFrequency,

@@ -62,16 +62,45 @@ const EmployeeDirectory: React.FC = () => {
     const base = await getEmployeeById(id);
     const napsa = await getNapsaEmployeeById(id);
     if (base && napsa) {
+      const internalId = String(base?.id ?? "").trim();
+      const fallbackId = String(napsa?.id ?? "").trim();
+
+      const basePic = String(
+        base?.ProfilePicture ??
+          base?.profilePicture ??
+          base?.profile_picture ??
+          base?.profilePhotoUrl ??
+          base?.profile_picture_url ??
+          "",
+      ).trim();
+      const napsaPic = String(
+        napsa?.ProfilePicture ??
+          napsa?.profilePicture ??
+          napsa?.profile_picture ??
+          napsa?.profilePhotoUrl ??
+          napsa?.profile_picture_url ??
+          "",
+      ).trim();
+      const resolvedPic = basePic || napsaPic;
+
       return {
         ...base,
         ...napsa,
+        id: internalId || fallbackId,
         payrollInfo: napsa.payrollInfo ?? base.payrollInfo,
+        documents: Array.isArray(base?.documents) ? base.documents : napsa.documents,
+        ...(resolvedPic
+          ? {
+              ProfilePicture: resolvedPic,
+              profilePicture: resolvedPic,
+              profile_picture: resolvedPic,
+            }
+          : {}),
       };
     }
     return base ?? napsa;
   };
 
-  //function to handle view employee details
   const handleViewEmployee = async (id: string) => {
     try {
       showLoading("Loading Employee...");
