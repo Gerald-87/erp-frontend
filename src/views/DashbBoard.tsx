@@ -199,19 +199,49 @@ const Dashboard = () => {
 
   const recentSalesRows = summaryData?.recentSales ?? [];
 
-  const recentSalesChartData = useMemo(
+  const monthlySalesTarget = useMemo(() => {
+    if (!monthlyTrendData.length) return 0;
+    const slice = monthlyTrendData.slice(-3);
+    const avg =
+      slice.reduce((sum, r) => sum + Number(r?.revenue ?? 0), 0) / slice.length;
+    return Number.isFinite(avg) ? avg : 0;
+  }, [monthlyTrendData]);
+
+  const monthlyTrendWithTarget = useMemo(
     () =>
-      [...recentSalesRows]
-        .sort((a, b) => Number(b.grand_total ?? 0) - Number(a.grand_total ?? 0))
-        .slice(0, 10)
-        .map((r) => ({
-          name: r.name,
-          total: Number(r.grand_total ?? 0),
-          customer: r.customer,
-          posting_date: r.posting_date,
-        })),
-    [recentSalesRows],
+      monthlyTrendData.map((r) => ({
+        ...r,
+        target: monthlySalesTarget,
+      })),
+    [monthlySalesTarget, monthlyTrendData],
   );
+
+  const recentSalesByDateChartData = useMemo(() => {
+    const rows = [...recentSalesRows]
+      .filter((r) => r?.posting_date)
+      .sort((a, b) => {
+        const da = new Date(String(a.posting_date ?? "")).getTime();
+        const db = new Date(String(b.posting_date ?? "")).getTime();
+        const ta = Number.isNaN(da) ? 0 : da;
+        const tb = Number.isNaN(db) ? 0 : db;
+        if (tb !== ta) return tb - ta;
+        return Number(b.grand_total ?? 0) - Number(a.grand_total ?? 0);
+      })
+      .slice(0, 10)
+      .reverse();
+
+    return rows.map((r) => ({
+      name: r.name,
+      total: Number(r.grand_total ?? 0),
+      customer: r.customer,
+      posting_date: r.posting_date,
+      day: (() => {
+        const d = new Date(String(r.posting_date ?? ""));
+        if (Number.isNaN(d.getTime())) return String(r.posting_date ?? "");
+        return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+      })(),
+    }));
+  }, [recentSalesRows]);
 
   const salesByCustomerChartData = useMemo(() => {
     const map = new Map<string, number>();
@@ -224,6 +254,16 @@ const Dashboard = () => {
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
   }, [recentSalesRows]);
+
+  const customerShareDonutData = useMemo(() => {
+    const base = salesByCustomerChartData;
+    if (!base.length) return [];
+    const top = base.slice(0, 5);
+    const restTotal = base
+      .slice(5)
+      .reduce((sum, r) => sum + Number(r.total ?? 0), 0);
+    return restTotal > 0 ? [...top, { name: "Others", total: restTotal }] : top;
+  }, [salesByCustomerChartData]);
 
   const totalsOverviewChartData = useMemo(
     () => [
@@ -401,7 +441,7 @@ const Dashboard = () => {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={monthlyTrendData}
+                  data={monthlyTrendWithTarget}
                   margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
                 >
                   <CartesianGrid
@@ -428,6 +468,15 @@ const Dashboard = () => {
                     dot={false}
                     name="Sales"
                   />
+                  <Line
+                    type="monotone"
+                    dataKey="target"
+                    stroke={chartColors.primary}
+                    strokeWidth={2}
+                    strokeDasharray="6 4"
+                    dot={false}
+                    name="3-Month Avg"
+                  />
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -436,7 +485,7 @@ const Dashboard = () => {
 
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-gray-900">Top 10 Invoices</h3>
+            <h3 className="text-sm font-bold text-gray-900">Recent Invoices</h3>
           </div>
           <div className="h-72 rounded-lg border border-gray-200 bg-white">
             {chartsLoading ? (
@@ -444,7 +493,7 @@ const Dashboard = () => {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={recentSalesChartData}
+                  data={recentSalesByDateChartData}
                   margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
                 >
                   <CartesianGrid
@@ -452,7 +501,7 @@ const Dashboard = () => {
                     stroke={chartColors.grid}
                   />
                   <XAxis
-                    dataKey="name"
+                    dataKey="day"
                     tick={{ fontSize: 11, fill: "var(--muted)" }}
                     interval={0}
                     angle={-20}
@@ -503,46 +552,53 @@ const Dashboard = () => {
 
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-gray-900">
-              Top 10 Customers
-            </h3>
+            <h3 className="text-sm font-bold text-gray-900">Customer Share</h3>
           </div>
-          <div className="h-72 rounded-lg border border-gray-200 bg-white">
+
+          <div className="h-72 rounded-lg border border-gray-200 bg-white" style={chartPlaneStyle}>
             {chartsLoading ? (
-              <ChartSkeleton variant="bar" />
+              <ChartSkeleton variant="pie" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={salesByCustomerChartData}
-                  margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke={chartColors.grid}
-                  />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 11, fill: "var(--muted)" }}
-                    interval={0}
-                    angle={-15}
-                    textAnchor="end"
-                    height={52}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12, fill: "var(--muted)" }}
-                    width={52}
-                  />
+                <PieChart margin={{ top: 8, right: 12, bottom: 8, left: 12 }}>
                   <Tooltip
                     formatter={(v: any) => currencyZMW.format(Number(v ?? 0))}
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: "1px solid var(--border)",
+                      fontSize: 12,
+                    }}
                   />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar
+                  <Legend {...legendProps} />
+                  <Pie
+                    data={customerShareDonutData}
                     dataKey="total"
-                    fill={chartColors.blueSoft}
-                    radius={[6, 6, 0, 0]}
-                    name="Total"
-                  />
-                </BarChart>
+                    nameKey="name"
+                    cx="50%"
+                    cy="44%"
+                    innerRadius={55}
+                    outerRadius={82}
+                    paddingAngle={2}
+                    label={renderDonutLabel}
+                    labelLine={false}
+                  >
+                    {customerShareDonutData.map((_, idx) => (
+                      <Cell
+                        key={`customer-share-${idx}`}
+                        fill={
+                          [
+                            chartColors.primary,
+                            chartColors.blue,
+                            chartColors.blueSoft,
+                            "var(--primary-700)",
+                            "var(--primary-600)",
+                            chartColors.blueSoft,
+                          ][idx % 6]
+                        }
+                      />
+                    ))}
+                  </Pie>
+                </PieChart>
               </ResponsiveContainer>
             )}
           </div>

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import { getCustomerDashboardSummary } from "../../api/customerDashboardApi";
+import { getSalesDashboardSummary } from "../../api/salesDashboardApi";
 import { ChartSkeleton } from "../../components/ChartSkeleton";
 
 const CRMDashboard: React.FC = () => {
@@ -37,7 +38,12 @@ const CRMDashboard: React.FC = () => {
     nonExportCustomers: number;
   } | null>(null);
 
+  const [salesCards, setSalesCards] = useState<{
+    totalSalesInvoices: number;
+  } | null>(null);
+
   const chartsLoading = summaryLoading || !cards;
+  const crossChartsLoading = chartsLoading || !salesCards;
 
   useEffect(() => {
     let mounted = true;
@@ -47,9 +53,17 @@ const CRMDashboard: React.FC = () => {
         setSummaryLoading(true);
         setSummaryError(null);
         setCards(null);
-        const resp = await getCustomerDashboardSummary();
+        setSalesCards(null);
+
+        const [customerResp, salesResp] = await Promise.all([
+          getCustomerDashboardSummary(),
+          getSalesDashboardSummary(),
+        ]);
         if (!mounted) return;
-        setCards(resp.data.cards);
+        setCards(customerResp.data.cards);
+        setSalesCards({
+          totalSalesInvoices: Number(salesResp.data.totalSalesInvoices ?? 0),
+        });
       } catch (e: any) {
         if (!mounted) return;
         setSummaryError(
@@ -143,6 +157,17 @@ const CRMDashboard: React.FC = () => {
       },
     ],
     [cards],
+  );
+
+  const customerVsSalesBarData = useMemo(
+    () => [
+      { name: "Customers", value: Number(cards?.totalCustomers ?? 0) },
+      {
+        name: "Sales Invoices",
+        value: Number(salesCards?.totalSalesInvoices ?? 0),
+      },
+    ],
+    [cards, salesCards],
   );
 
   const customerTypeBarData = useMemo(
@@ -294,6 +319,79 @@ const CRMDashboard: React.FC = () => {
                         dataKey="value"
                         position="top"
                         fill="var(--muted)"
+                        fontSize={10}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <h3 className="text-sm font-bold text-gray-900">
+                Customer Base vs Sales Activity
+              </h3>
+            </div>
+
+            <div
+              className="h-72 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {chartsLoading ? (
+                <ChartSkeleton variant="bar" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={customerVsSalesBarData}
+                    margin={{ top: 24, right: 10, left: -10, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      stroke="var(--border)"
+                      strokeDasharray="3 3"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 12, fill: "var(--muted)" }}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "var(--muted)" }}
+                      width={52}
+                    />
+                    <Tooltip
+                      formatter={(v: any) => Number(v ?? 0)}
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      itemStyle={{
+                        color: "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                      cursor={{ fill: "var(--primary)", opacity: 0.1 }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Count">
+                      {customerVsSalesBarData.map((_, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={
+                            idx === 0
+                              ? "var(--brand-blue-bottom)"
+                              : "var(--primary)"
+                          }
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        offset={8}
+                        fill="#6b7280"
                         fontSize={10}
                       />
                     </Bar>

@@ -18,6 +18,8 @@ import { Users, UserCheck, BadgeCheck, ClipboardList } from "lucide-react";
 
 import { ChartSkeleton } from "../../components/ChartSkeleton";
 import { getHrDashboardSummary } from "../../api/hrDashboardApi";
+import { getInventoryDashboardSummary } from "../../api/inventoryDashboardApi";
+import { getSalesDashboardSummary } from "../../api/salesDashboardApi";
 
 const HrDashboard: React.FC = () => {
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -30,7 +32,16 @@ const HrDashboard: React.FC = () => {
     totalLeaveTypes: number;
   } | null>(null);
 
+  const [inventoryCards, setInventoryCards] = useState<{
+    totalItems: number;
+  } | null>(null);
+
+  const [salesCards, setSalesCards] = useState<{
+    totalSalesInvoices: number;
+  } | null>(null);
+
   const chartsLoading = summaryLoading || !summaryData;
+  const crossChartsLoading = chartsLoading || !inventoryCards || !salesCards;
 
   const palette = useMemo(
     () => ({
@@ -82,9 +93,22 @@ const HrDashboard: React.FC = () => {
         setSummaryLoading(true);
         setSummaryError(null);
         setSummaryData(null);
-        const resp = await getHrDashboardSummary();
+        setInventoryCards(null);
+        setSalesCards(null);
+
+        const [hrResp, invResp, salesResp] = await Promise.all([
+          getHrDashboardSummary(),
+          getInventoryDashboardSummary(),
+          getSalesDashboardSummary(),
+        ]);
         if (!mounted) return;
-        setSummaryData(resp.data);
+        setSummaryData(hrResp.data);
+        setInventoryCards({
+          totalItems: Number(invResp.data.totalItems ?? 0),
+        });
+        setSalesCards({
+          totalSalesInvoices: Number(salesResp.data.totalSalesInvoices ?? 0),
+        });
       } catch (e: any) {
         if (!mounted) return;
         setSummaryError(e?.message ?? "Failed to load HR dashboard summary");
@@ -99,6 +123,15 @@ const HrDashboard: React.FC = () => {
       mounted = false;
     };
   }, []);
+
+  const peopleOpsCrossBarData = useMemo(
+    () => [
+      { name: "Employees", value: Number(summaryData?.total ?? 0) },
+      { name: "Items", value: Number(inventoryCards?.totalItems ?? 0) },
+      { name: "Sales Invoices", value: Number(salesCards?.totalSalesInvoices ?? 0) },
+    ],
+    [inventoryCards, salesCards, summaryData],
+  );
 
   const employeeStatusData = useMemo(
     () => [
@@ -284,6 +317,73 @@ const HrDashboard: React.FC = () => {
                       radius={[6, 6, 0, 0]}
                       name="Employees"
                     >
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        offset={8}
+                        fill="var(--muted)"
+                        fontSize={10}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-900">
+                Workforce vs Inventory vs Sales
+              </h3>
+            </div>
+
+            <div
+              className="h-64 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {crossChartsLoading ? (
+                <ChartSkeleton variant="bar" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={peopleOpsCrossBarData}
+                    margin={{ top: 28, right: 18, left: 6, bottom: 4 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--border)"
+                    />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 12 }} width={52} />
+                    <Tooltip
+                      formatter={(v: any) => Number(v ?? 0)}
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      itemStyle={{
+                        color: "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                      cursor={{ fill: "var(--primary)", opacity: 0.1 }}
+                    />
+                    <Legend {...legendProps} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Count">
+                      {peopleOpsCrossBarData.map((_, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={
+                            [palette.blue, palette.primary, palette.blueSoft][
+                              idx % 3
+                            ]
+                          }
+                        />
+                      ))}
                       <LabelList
                         dataKey="value"
                         position="top"

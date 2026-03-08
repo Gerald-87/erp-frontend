@@ -6,8 +6,6 @@ import {
   Cell,
   Legend,
   LabelList,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -19,6 +17,8 @@ import {
 import { AlertTriangle, Boxes, Package, Warehouse } from "lucide-react";
 
 import { getInventoryDashboardSummary } from "../../api/inventoryDashboardApi";
+import { getSalesDashboardSummary } from "../../api/salesDashboardApi";
+import { getHrDashboardSummary } from "../../api/hrDashboardApi";
 import { ChartSkeleton } from "../../components/ChartSkeleton";
 
 const InventoryDashboard: React.FC = () => {
@@ -32,7 +32,16 @@ const InventoryDashboard: React.FC = () => {
     totalImportedItems: number;
   } | null>(null);
 
+  const [salesCards, setSalesCards] = useState<{
+    totalSalesInvoices: number;
+  } | null>(null);
+
+  const [hrCards, setHrCards] = useState<{
+    totalEmployees: number;
+  } | null>(null);
+
   const chartsLoading = summaryLoading || !summaryData;
+  const crossChartsLoading = chartsLoading || !salesCards || !hrCards;
 
   const palette = useMemo(
     () => ({
@@ -62,9 +71,22 @@ const InventoryDashboard: React.FC = () => {
         setSummaryLoading(true);
         setSummaryError(null);
         setSummaryData(null);
-        const resp = await getInventoryDashboardSummary();
+        setSalesCards(null);
+        setHrCards(null);
+
+        const [invResp, salesResp, hrResp] = await Promise.all([
+          getInventoryDashboardSummary(),
+          getSalesDashboardSummary(),
+          getHrDashboardSummary(),
+        ]);
         if (!mounted) return;
-        setSummaryData(resp.data);
+        setSummaryData(invResp.data);
+        setSalesCards({
+          totalSalesInvoices: Number(salesResp.data.totalSalesInvoices ?? 0),
+        });
+        setHrCards({
+          totalEmployees: Number(hrResp.data.total ?? 0),
+        });
       } catch (e: any) {
         if (!mounted) return;
         setSummaryError(
@@ -120,6 +142,15 @@ const InventoryDashboard: React.FC = () => {
       },
     ],
     [summaryData],
+  );
+
+  const inventoryCrossBarData = useMemo(
+    () => [
+      { name: "Items", value: Number(summaryData?.totalItems ?? 0) },
+      { name: "Employees", value: Number(hrCards?.totalEmployees ?? 0) },
+      { name: "Sales Invoices", value: Number(salesCards?.totalSalesInvoices ?? 0) },
+    ],
+    [hrCards, salesCards, summaryData],
   );
 
   const chartPlaneStyle = useMemo(
@@ -367,6 +398,75 @@ const InventoryDashboard: React.FC = () => {
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-gray-900">
+                Inventory vs Headcount vs Sales
+              </h3>
+            </div>
+
+            <div
+              className="h-72 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {crossChartsLoading ? (
+                <ChartSkeleton variant="bar" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={inventoryCrossBarData}
+                    margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--border)"
+                    />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} width={52} />
+                    <Tooltip
+                      formatter={(v: any) => Number(v ?? 0)}
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      itemStyle={{
+                        color: "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                      cursor={{ fill: "var(--primary)", opacity: 0.1 }}
+                    />
+                    <Legend {...legendProps} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Count">
+                      {inventoryCrossBarData.map((_, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={
+                            [
+                              "var(--brand-blue-bottom)",
+                              "var(--primary)",
+                              "var(--brand-blue-top)",
+                            ][idx % 3]
+                          }
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        offset={8}
+                        fill="var(--muted)"
+                        fontSize={10}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-900">
                 Imported vs Local
               </h3>
             </div>
@@ -433,14 +533,14 @@ const InventoryDashboard: React.FC = () => {
               style={chartPlaneStyle}
             >
               {chartsLoading ? (
-                <ChartSkeleton variant="line" />
+                <ChartSkeleton variant="bar" />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
+                  <BarChart
                     data={rawVsFinishedTrendData}
-                    margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
+                    margin={{ top: 28, right: 18, left: 6, bottom: 8 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} width={52} />
                     <Tooltip
@@ -460,20 +560,22 @@ const InventoryDashboard: React.FC = () => {
                       cursor={{ fill: "var(--primary)", opacity: 0.1 }}
                     />
                     <Legend {...legendProps} />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      stroke={palette.primary}
-                      strokeWidth={3}
-                      dot={false}
-                      name="Count"
-                      label={{
-                        position: "top",
-                        fontSize: 10,
-                        fill: "var(--muted)",
-                      }}
-                    />
-                  </LineChart>
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Count">
+                      {rawVsFinishedTrendData.map((_, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={idx === 0 ? palette.blue : palette.primary}
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        offset={8}
+                        fill="var(--muted)"
+                        fontSize={10}
+                      />
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               )}
             </div>

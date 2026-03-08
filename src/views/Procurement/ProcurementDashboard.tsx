@@ -17,6 +17,8 @@ import {
 import { FileText, ShoppingCart, Truck, Users, UsersRound } from "lucide-react";
 
 import { getProcurementDashboardSummary } from "../../api/procurementDashboardApi";
+import { getInventoryDashboardSummary } from "../../api/inventoryDashboardApi";
+import { getSalesDashboardSummary } from "../../api/salesDashboardApi";
 import { ChartSkeleton } from "../../components/ChartSkeleton";
 
 const ProcurementDashboard: React.FC = () => {
@@ -30,7 +32,16 @@ const ProcurementDashboard: React.FC = () => {
     totalPurchaseOrder: number;
   } | null>(null);
 
+  const [inventoryCards, setInventoryCards] = useState<{
+    totalItems: number;
+  } | null>(null);
+
+  const [salesCards, setSalesCards] = useState<{
+    totalSalesInvoices: number;
+  } | null>(null);
+
   const chartsLoading = summaryLoading || !summaryData;
+  const crossChartsLoading = chartsLoading || !inventoryCards || !salesCards;
 
   const palette = useMemo(
     () => ({
@@ -49,9 +60,22 @@ const ProcurementDashboard: React.FC = () => {
         setSummaryLoading(true);
         setSummaryError(null);
         setSummaryData(null);
-        const resp = await getProcurementDashboardSummary();
+        setInventoryCards(null);
+        setSalesCards(null);
+
+        const [procResp, invResp, salesResp] = await Promise.all([
+          getProcurementDashboardSummary(),
+          getInventoryDashboardSummary(),
+          getSalesDashboardSummary(),
+        ]);
         if (!mounted) return;
-        setSummaryData(resp.data);
+        setSummaryData(procResp.data);
+        setInventoryCards({
+          totalItems: Number(invResp.data.totalItems ?? 0),
+        });
+        setSalesCards({
+          totalSalesInvoices: Number(salesResp.data.totalSalesInvoices ?? 0),
+        });
       } catch (e: any) {
         if (!mounted) return;
         setSummaryError(
@@ -136,8 +160,27 @@ const ProcurementDashboard: React.FC = () => {
         icon: FileText,
         gradient: "from-[var(--primary)] to-[var(--primary-700)]",
       },
+      {
+        label: "POs / Active Supplier",
+        value: (() => {
+          const active = Number(summaryData?.activeSuppliers ?? 0);
+          const po = Number(summaryData?.totalPurchaseOrder ?? 0);
+          const ratio = active > 0 ? po / active : 0;
+          return ratio.toFixed(2);
+        })(),
+        icon: ShoppingCart,
+        gradient: "from-[var(--brand-blue-bottom)] to-[var(--primary)]",
+      },
     ],
     [summaryData],
+  );
+
+  const salesVsPurchasesBarData = useMemo(
+    () => [
+      { name: "Sales Invoices", value: Number(salesCards?.totalSalesInvoices ?? 0) },
+      { name: "Purchase Invoices", value: Number(summaryData?.totalPurchaseInvoice ?? 0) },
+    ],
+    [salesCards, summaryData],
   );
 
   const supplierStatusDonutData = useMemo(
@@ -196,9 +239,9 @@ const ProcurementDashboard: React.FC = () => {
   return (
     <div className="bg-app min-h-screen px-4 sm:px-6 pb-6 pt-3">
       <div className="max-w-[1600px] mx-auto flex flex-col">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
           {chartsLoading
-            ? Array.from({ length: 5 }).map((_, idx) => (
+            ? Array.from({ length: 6 }).map((_, idx) => (
                 <div
                   key={idx}
                   className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm min-h-[124px] animate-pulse"
@@ -305,6 +348,75 @@ const ProcurementDashboard: React.FC = () => {
                       <LabelList
                         dataKey="value"
                         position="top"
+                        fill="#6b7280"
+                        fontSize={10}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-900">
+                Sales vs Purchases
+              </h3>
+            </div>
+
+            <div
+              className="h-72 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {crossChartsLoading ? (
+                <ChartSkeleton variant="bar" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={salesVsPurchasesBarData}
+                    margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--border)"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 12, fill: "var(--muted)" }}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: "var(--muted)" }}
+                      width={52}
+                    />
+                    <Tooltip
+                      formatter={(v: any) => Number(v ?? 0)}
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      itemStyle={{
+                        color: "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                      cursor={{ fill: "var(--primary)", opacity: 0.1 }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Count">
+                      {salesVsPurchasesBarData.map((_, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={idx === 0 ? "var(--primary)" : "var(--brand-blue-bottom)"}
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        offset={8}
                         fill="#6b7280"
                         fontSize={10}
                       />
@@ -440,58 +552,6 @@ const ProcurementDashboard: React.FC = () => {
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-gray-900">
-                Documents Summary
-              </h3>
-            </div>
-
-            <div
-              className="h-72 rounded-lg border border-gray-200 bg-white overflow-auto"
-              style={chartPlaneStyle}
-            >
-              {chartsLoading ? (
-                <div className="p-4">
-                  <TableSkeleton />
-                </div>
-              ) : (
-                <div className="p-4">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-gray-600">
-                        <th className="py-2 font-semibold">Document</th>
-                        <th className="py-2 font-semibold text-right">Count</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-t">
-                        <td className="py-2 text-gray-700">Purchase Orders</td>
-                        <td className="py-2 text-right font-semibold text-gray-900">
-                          {Number(summaryData?.totalPurchaseOrder ?? 0)}
-                        </td>
-                      </tr>
-                      <tr className="border-t">
-                        <td className="py-2 text-gray-700">
-                          Purchase Invoices
-                        </td>
-                        <td className="py-2 text-right font-semibold text-gray-900">
-                          {Number(summaryData?.totalPurchaseInvoice ?? 0)}
-                        </td>
-                      </tr>
-                      <tr className="border-t">
-                        <td className="py-2 text-gray-700">Total Suppliers</td>
-                        <td className="py-2 text-right font-semibold text-gray-900">
-                          {Number(summaryData?.totalSuppliers ?? 0)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
               )}
             </div>
           </div>

@@ -13,11 +13,13 @@ import {
   Cell,
   Bar,
   BarChart,
+  LabelList,
 } from "recharts";
 
 import { FileText, FileSignature, Receipt } from "lucide-react";
 
 import { getSalesDashboardSummary } from "../../api/salesDashboardApi";
+import { getCustomerDashboardSummary } from "../../api/customerDashboardApi";
 import { ChartSkeleton } from "../../components/ChartSkeleton";
 
 const SalesDashboard: React.FC = () => {
@@ -38,7 +40,17 @@ const SalesDashboard: React.FC = () => {
     monthlySalesGraph: { labels: string[]; data: number[] };
   } | null>(null);
 
+  const [customerCards, setCustomerCards] = useState<{
+    totalCustomers: number;
+    totalIndividualCustomers: number;
+    totalCompanyCustomers: number;
+    lopCustomers: number;
+    exportCustomers: number;
+    nonExportCustomers: number;
+  } | null>(null);
+
   const chartsLoading = summaryLoading || !summaryData;
+  const crossChartsLoading = chartsLoading || !customerCards;
 
   const currencyZMW = useMemo(
     () =>
@@ -70,6 +82,23 @@ const SalesDashboard: React.FC = () => {
     if (!labels.length || labels.length !== values.length) return [];
     return labels.map((name, i) => ({ name, revenue: Number(values[i] ?? 0) }));
   }, [summaryData]);
+
+  const monthlySalesTarget = useMemo(() => {
+    if (!monthlyTrendData.length) return 0;
+    const slice = monthlyTrendData.slice(-3);
+    const avg =
+      slice.reduce((sum, r) => sum + Number(r?.revenue ?? 0), 0) / slice.length;
+    return Number.isFinite(avg) ? avg : 0;
+  }, [monthlyTrendData]);
+
+  const monthlyTrendWithTarget = useMemo(
+    () =>
+      monthlyTrendData.map((r) => ({
+        ...r,
+        target: monthlySalesTarget,
+      })),
+    [monthlySalesTarget, monthlyTrendData],
+  );
 
   const topCustomersChartData = useMemo(() => {
     const map = new Map<string, number>();
@@ -166,10 +195,15 @@ const SalesDashboard: React.FC = () => {
         setSummaryLoading(true);
         setSummaryError(null);
         setSummaryData(null);
-        const resp = await getSalesDashboardSummary();
+        setCustomerCards(null);
+
+        const [salesResp, customerResp] = await Promise.all([
+          getSalesDashboardSummary(),
+          getCustomerDashboardSummary(),
+        ]);
 
         if (!mounted) return;
-        const d = resp.data;
+        const d = salesResp.data;
 
         setSummaryData({
           totalProformaInvoices: d.totalProformaInvoices,
@@ -180,6 +214,8 @@ const SalesDashboard: React.FC = () => {
           recentSales: d.recentSales,
           monthlySalesGraph: d.monthlySalesGraph,
         });
+
+        setCustomerCards(customerResp.data.cards);
       } catch (e: any) {
         if (!mounted) return;
         setSummaryError(e?.message ?? "Failed to load sales dashboard summary");
@@ -194,6 +230,20 @@ const SalesDashboard: React.FC = () => {
       mounted = false;
     };
   }, []);
+
+  const salesVsCustomersBarData = useMemo(
+    () => [
+      {
+        name: "Sales Invoices",
+        value: Number(summaryData?.totalSalesInvoices ?? 0),
+      },
+      {
+        name: "Customers",
+        value: Number(customerCards?.totalCustomers ?? 0),
+      },
+    ],
+    [customerCards, summaryData],
+  );
 
   const chartPlaneStyle = useMemo(
     () => ({
@@ -241,7 +291,7 @@ const SalesDashboard: React.FC = () => {
     <div className="bg-app min-h-screen px-4 sm:px-6 pb-6 pt-3">
       <div className="max-w-[1600px] mx-auto flex flex-col">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
-          {chartsLoading
+          {summaryLoading || !summaryData
             ? Array.from({ length: 5 }).map((_, idx) => (
                 <div
                   key={idx}
@@ -335,7 +385,7 @@ const SalesDashboard: React.FC = () => {
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={monthlyTrendData}
+                    data={monthlyTrendWithTarget}
                     margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
                   >
                     <CartesianGrid
@@ -380,7 +430,79 @@ const SalesDashboard: React.FC = () => {
                         fill: "var(--muted)",
                       }}
                     />
+                    <Line
+                      type="monotone"
+                      dataKey="target"
+                      stroke="var(--primary)"
+                      strokeWidth={2}
+                      strokeDasharray="6 4"
+                      dot={false}
+                      name="3-Month Avg"
+                    />
                   </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-900">
+                Sales vs Customer Base
+              </h3>
+            </div>
+
+            <div
+              className="h-72 rounded-lg border border-gray-200 bg-white"
+              style={chartPlaneStyle}
+            >
+              {crossChartsLoading ? (
+                <ChartSkeleton variant="bar" />
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={salesVsCustomersBarData}
+                    margin={{ top: 16, right: 18, left: 6, bottom: 8 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--border)"
+                    />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} width={52} />
+                    <Tooltip
+                      formatter={(v: any) => Number(v ?? 0)}
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        padding: "8px 12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                      itemStyle={{
+                        color: "var(--text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                      cursor={{ fill: "var(--primary)", opacity: 0.1 }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Count">
+                      {salesVsCustomersBarData.map((_, idx) => (
+                        <Cell
+                          key={idx}
+                          fill={idx === 0 ? "var(--primary)" : "var(--brand-blue-bottom)"}
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        offset={8}
+                        fill="var(--muted)"
+                        fontSize={10}
+                      />
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               )}
             </div>
