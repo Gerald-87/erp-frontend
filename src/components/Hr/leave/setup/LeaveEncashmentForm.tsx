@@ -1,6 +1,6 @@
 // LeaveEncashmentForm.tsx
 import React, { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { XCircle } from "lucide-react";
 import HrDateInput from "../../HrDateInput";
 
 export const LeaveEncashmentForm: React.FC<{ onClose: () => void }> = ({
@@ -13,12 +13,6 @@ export const LeaveEncashmentForm: React.FC<{ onClose: () => void }> = ({
       {/* Header */}
       <div className="p-6 flex items-center justify-between border-b border-theme">
         <div className="flex items-center gap-4">
-          <button
-            onClick={onClose}
-            className="flex items-center gap-2 text-muted hover:text-main transition"
-          >
-            <ArrowLeft size={20} />
-          </button>
           <div>
             <h2 className="text-xl font-bold text-main">
               New Leave Encashment
@@ -28,8 +22,11 @@ export const LeaveEncashmentForm: React.FC<{ onClose: () => void }> = ({
             </span>
           </div>
         </div>
-        <button className="px-6 py-2 bg-primary rounded-xl font-semibold transition">
-          Save
+        <button
+          onClick={onClose}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition cursor-pointer"
+        >
+          <XCircle size={18} />
         </button>
       </div>
 
@@ -165,11 +162,11 @@ export const LeaveEncashmentForm: React.FC<{ onClose: () => void }> = ({
         <div className="flex items-center gap-4 pt-6 border-t border-theme">
           <button
             onClick={onClose}
-            className="px-6 py-3 border border-theme rounded-xl font-medium text-muted hover:text-main transition"
+            className="px-6 py-3 border border-theme rounded-xl font-medium text-muted hover:text-main transition cursor-pointer"
           >
             Cancel
           </button>
-          <button className="px-6 py-3 bg-primary rounded-xl font-semibold transition">
+          <button className="px-6 py-3 bg-primary rounded-xl font-semibold transition cursor-pointer">
             Save Encashment
           </button>
         </div>
@@ -177,3 +174,4 @@ export const LeaveEncashmentForm: React.FC<{ onClose: () => void }> = ({
     </div>
   );
 };
+export default LeaveEncashmentForm;

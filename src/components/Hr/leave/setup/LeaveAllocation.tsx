@@ -88,7 +88,7 @@ const LeaveAllocation: React.FC<LeaveAllocationProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="flex items-center gap-2 text-muted hover:text-main transition"
+              className="flex items-center gap-2 text-muted hover:text-main transition cursor-pointer"
             >
               <ArrowLeft size={20} />
             </button>
@@ -98,7 +98,7 @@ const LeaveAllocation: React.FC<LeaveAllocationProps> = ({
 
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl font-semibold transition"
+          className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl font-semibold transition cursor-pointer"
         >
           <Plus size={18} />
           Add Leave Allocation
@@ -187,8 +187,8 @@ const LeaveAllocation: React.FC<LeaveAllocationProps> = ({
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg">
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-background w-full max-w-2xl rounded-lg" onClick={(e) => e.stopPropagation()}>
             <LeaveAllocationForm
               employeeId={selectedEmployeeId}
               onClose={() => setShowForm(false)}

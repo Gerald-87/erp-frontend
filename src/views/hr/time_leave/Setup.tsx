@@ -58,7 +58,7 @@ const Setup: React.FC = () => {
           {setupCategories.map((category, idx) => (
             <div
               key={idx}
-              className="bg-card border border-theme rounded-2xl p-6 transition cursor-pointer group hover:border-primary/50"
+              className="bg-card border border-theme rounded-2xl p-6 transition group hover:border-primary/50"
               onClick={() => setModalType(category.modalType)}
             >
               <div className="flex items-start gap-4 mb-4">
@@ -77,7 +77,7 @@ const Setup: React.FC = () => {
                 {category.items.map((item, itemIdx) => (
                   <button
                     key={itemIdx}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted bg-muted/5 border border-border rounded-lg transition hover:bg-primary/10 hover:text-primary hover:border-primary active:scale-95"
+                    className="w-full flex items-center cursor-pointer gap-2 px-3 py-2 text-sm text-muted bg-muted/5 border border-border rounded-lg transition hover:bg-primary/10 hover:text-primary hover:border-primary active:scale-95"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (item === "Leave Types") {
@@ -110,8 +110,8 @@ const Setup: React.FC = () => {
       </div>
 
       {showLeaveType && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowLeaveType(false)}>
+          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg" onClick={(e) => e.stopPropagation()}>
             <LeaveType
               onAdd={() => {}}
               onClose={() => setShowLeaveType(false)}
@@ -121,8 +121,8 @@ const Setup: React.FC = () => {
       )}
 
       {showLeavePeriod && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowLeavePeriod(false)}>
+          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg" onClick={(e) => e.stopPropagation()}>
             <LeavePeriod
               onAdd={() => {}}
               onClose={() => setShowLeavePeriod(false)}
@@ -132,8 +132,8 @@ const Setup: React.FC = () => {
       )}
 
       {showLeavePolicy && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowLeavePolicy(false)}>
+          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg" onClick={(e) => e.stopPropagation()}>
             <LeavePolicy
               onAdd={() => {}}
               onClose={() => setShowLeavePolicy(false)}
@@ -143,8 +143,8 @@ const Setup: React.FC = () => {
       )}
 
       {showHolidayList && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowHolidayList(false)}>
+          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg" onClick={(e) => e.stopPropagation()}>
             <HolidayList
               onAdd={() => {}}
               onClose={() => setShowHolidayList(false)}
@@ -154,8 +154,8 @@ const Setup: React.FC = () => {
       )}
 
       {showLeaveBlockList && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowLeaveBlockList(false)}>
+          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg" onClick={(e) => e.stopPropagation()}>
             <LeaveBlockList
               onAdd={() => {}}
               onClose={() => setShowLeaveBlockList(false)}
@@ -165,8 +165,8 @@ const Setup: React.FC = () => {
       )}
 
       {showLeaveAllocation && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowLeaveAllocation(false)}>
+          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg" onClick={(e) => e.stopPropagation()}>
             <LeaveAllocation
               employeeId=""
               onAdd={() => {}}
@@ -177,8 +177,8 @@ const Setup: React.FC = () => {
       )}
 
       {showLeavePolicyAssignment && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowLeavePolicyAssignment(false)}>
+          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg" onClick={(e) => e.stopPropagation()}>
             <LeavePolicyAssignment
               onAdd={() => {}}
               onClose={() => setShowLeavePolicyAssignment(false)}
@@ -188,8 +188,8 @@ const Setup: React.FC = () => {
       )}
 
       {showLeaveEncashment && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowLeaveEncashment(false)}>
+          <div className="bg-background w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg" onClick={(e) => e.stopPropagation()}>
             <LeaveEncashment
               onAdd={() => {}}
               onClose={() => setShowLeaveEncashment(false)}

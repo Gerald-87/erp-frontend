@@ -20,7 +20,7 @@ export const LeaveBlockList: React.FC<LeaveBlockListProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="flex items-center gap-2 text-muted hover:text-main transition"
+              className="flex items-center gap-2 text-muted hover:text-main transition cursor-pointer"
             >
               <ArrowLeft size={20} />
             </button>
@@ -30,7 +30,7 @@ export const LeaveBlockList: React.FC<LeaveBlockListProps> = ({
 
         <button
           onClick={onAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl font-semibold transition"
+          className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl font-semibold transition cursor-pointer"
         >
           <Plus size={18} />
           Add Block List

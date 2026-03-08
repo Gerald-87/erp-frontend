@@ -34,7 +34,7 @@ export const LeavePeriod: React.FC<LeavePeriodProps> = ({ onAdd, onClose }) => {
             {onClose && (
               <button
                 onClick={onClose}
-                className="flex items-center gap-2 text-muted hover:text-main transition"
+                className="flex items-center gap-2 text-muted hover:text-main transition cursor-pointer"
               >
                 <ArrowLeft size={20} />
               </button>
@@ -44,7 +44,7 @@ export const LeavePeriod: React.FC<LeavePeriodProps> = ({ onAdd, onClose }) => {
 
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl font-semibold transition hover:bg-primary/90"
+            className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl font-semibold transition hover:bg-primary/90 cursor-pointer"
           >
             <Plus size={18} />
             Add Leave Period
@@ -139,8 +139,8 @@ export const LeavePeriod: React.FC<LeavePeriodProps> = ({ onAdd, onClose }) => {
         </div>
       </div>
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-2xl rounded-lg">
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-background w-full max-w-2xl rounded-lg" onClick={(e) => e.stopPropagation()}>
             <LeavePeriodForm
               onClose={() => setShowForm(false)}
               onSubmit={() => {

@@ -1,6 +1,7 @@
 // LeaveEncashment.tsx
-import React from "react";
+import React, { useState } from "react";
 import { ArrowLeft, Plus, DollarSign } from "lucide-react";
+import LeaveEncashmentForm from "./LeaveEncashmentForm";
 
 export interface LeaveEncashmentProps {
   onAdd: () => void;
@@ -11,6 +12,10 @@ export const LeaveEncashment: React.FC<LeaveEncashmentProps> = ({
   onAdd,
   onClose,
 }) => {
+  const [showForm, setShowForm] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+    const refresh = async () => {
+    };
   return (
     <div className="bg-card border border-theme rounded-2xl overflow-hidden">
       {/* Header */}
@@ -19,7 +24,7 @@ export const LeaveEncashment: React.FC<LeaveEncashmentProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="flex items-center gap-2 text-muted hover:text-main transition"
+              className="flex items-center gap-2 text-muted hover:text-main transition cursor-pointer"
             >
               <ArrowLeft size={20} />
             </button>
@@ -28,8 +33,8 @@ export const LeaveEncashment: React.FC<LeaveEncashmentProps> = ({
         </div>
 
         <button
-          onClick={onAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl font-semibold transition"
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl font-semibold transition cursor-pointer"
         >
           <Plus size={18} />
           Add Leave Encashment
@@ -59,13 +64,27 @@ export const LeaveEncashment: React.FC<LeaveEncashmentProps> = ({
           </p>
           <button
             onClick={onAdd}
-            className="px-6 py-3 bg-primary rounded-xl font-semibold transition flex items-center gap-2 mx-auto"
+            className="px-6 py-3 bg-primary rounded-xl font-semibold transition flex items-center gap-2 mx-auto cursor-pointer"
           >
             <Plus size={18} />
             Create Encashment
           </button>
         </div>
       </div>
+      {showForm && (
+              <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+                <div className="bg-background w-full max-w-2xl rounded-lg" onClick={(e) => e.stopPropagation()}>
+                  <LeaveEncashmentForm
+                    employeeId={selectedEmployeeId}
+                    onClose={() => setShowForm(false)}
+                    onSuccess={async () => {
+                      await refresh();
+                      onAdd();
+                    }}
+                  />
+                </div>
+              </div>
+            )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ChevronDown, XCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { createLeaveAllocation } from "../../../../api/leaveApi";
 import { getAllEmployees } from "../../../../api/employeeapi";
@@ -115,12 +115,6 @@ const LeaveAllocationForm: React.FC<Props> = ({ onClose, onSuccess }) => {
       {/* Header */}
       <div className="p-6 flex items-center justify-between border-b border-theme">
         <div className="flex items-center gap-4">
-          <button
-            onClick={onClose}
-            className="flex items-center gap-2 text-muted hover:text-main transition"
-          >
-            <ArrowLeft size={20} />
-          </button>
           <div>
             <h2 className="text-xl font-bold text-main">
               New Leave Allocation
@@ -132,11 +126,10 @@ const LeaveAllocationForm: React.FC<Props> = ({ onClose, onSuccess }) => {
         </div>
 
         <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="px-6 py-2 bg-primary rounded-xl font-semibold disabled:opacity-50"
+          onClick={onClose}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition cursor-pointer"
         >
-          {loading ? "Saving..." : "Save"}
+          <XCircle size={18} />
         </button>
       </div>
 
@@ -265,7 +258,7 @@ const LeaveAllocationForm: React.FC<Props> = ({ onClose, onSuccess }) => {
         <div className="flex gap-4 pt-4 border-t border-theme">
           <button
             onClick={onClose}
-            className="px-6 py-3 border border-theme rounded-xl"
+            className="px-6 py-3 border border-theme rounded-xl cursor-pointer"
           >
             Cancel
           </button>
@@ -273,7 +266,7 @@ const LeaveAllocationForm: React.FC<Props> = ({ onClose, onSuccess }) => {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-6 py-3 bg-primary rounded-xl font-semibold disabled:opacity-50"
+            className="px-6 py-3 bg-primary rounded-xl font-semibold disabled:opacity-50 cursor-pointer"
           >
             Save Allocation
           </button>

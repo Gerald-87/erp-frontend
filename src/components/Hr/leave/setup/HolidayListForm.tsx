@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { createHoliday } from "../../../../api/HolidayApi";
 import HrDateInput from "../../HrDateInput";
+import { XCircle } from "lucide-react";
+
 export const HolidayListForm: React.FC<{
   onClose: () => void;
   onSuccess?: () => void;
@@ -44,11 +46,10 @@ export const HolidayListForm: React.FC<{
         <h2 className="text-xl font-bold text-main">New Holiday</h2>
 
         <button
-          onClick={handleSave}
-          disabled={loading}
-          className="px-6 py-2 bg-primary rounded-xl font-semibold transition"
+          onClick={onClose}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition cursor-pointer"
         >
-          {loading ? "Saving..." : "Save"}
+          <XCircle size={18} />
         </button>
       </div>
 
@@ -77,13 +78,13 @@ export const HolidayListForm: React.FC<{
         />
 
         <div className="flex gap-3 pt-4">
-          <button onClick={onClose} className="px-6 py-3 border rounded-xl">
+          <button onClick={onClose} className="px-6 py-3 border rounded-xl cursor-pointer">
             Cancel
           </button>
 
           <button
             onClick={handleSave}
-            className="px-6 py-3 bg-primary rounded-xl"
+            className="px-6 py-3 bg-primary rounded-xl cursor-pointer"
           >
             Save Holiday
           </button>
