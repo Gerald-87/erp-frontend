@@ -111,10 +111,27 @@ const Items: React.FC = () => {
         warehouse: entry.warehouse || "",
       }));
 
-      setItems(mapped);
+      const serverTotalItems = Number(apiData?.totalItems ?? 0);
+      const serverTotalPages = Number(apiData?.totalPages ?? 0);
+      const hasServerPaging =
+        Number.isFinite(serverTotalItems) &&
+        serverTotalItems > 0 &&
+        Number.isFinite(serverTotalPages) &&
+        serverTotalPages > 0;
 
-      setTotalItems(apiData?.totalItems ?? 0);
-      setTotalPages(apiData?.totalPages ?? 1);
+      const shouldClientSlice = mapped.length > pageSize;
+      const totalItemsResolved = hasServerPaging ? serverTotalItems : mapped.length;
+      const totalPagesResolved = hasServerPaging
+        ? serverTotalPages
+        : Math.max(1, Math.ceil(totalItemsResolved / pageSize));
+
+      const pageStart = (page - 1) * pageSize;
+      const pageEnd = pageStart + pageSize;
+      const pageRows = shouldClientSlice ? mapped.slice(pageStart, pageEnd) : mapped;
+
+      setItems(pageRows);
+      setTotalItems(totalItemsResolved);
+      setTotalPages(totalPagesResolved);
     } catch (err) {
       console.error(err);
       showApiError("Failed to load stock entries");
