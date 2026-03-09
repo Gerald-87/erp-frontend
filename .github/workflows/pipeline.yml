@@ -10,19 +10,24 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Confirm Node and NPM versions
+      # 2️⃣ Confirm Node and NPM versions
+      - name: Confirm Node and NPM
         run: |
           node -v
           npm -v
 
+      # 3️⃣ Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # 4️⃣ Build frontend
       - name: Build frontend
         run: npm run build
 
+      # 5️⃣ Restart frontend service
       - name: Restart frontend service
-        run: sudo systemctl restart erp-frontend
+        run: sudo -n systemctl restart erp-frontend
