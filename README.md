@@ -12,8 +12,8 @@ Setup Instructions
 
 1. Clone the repository
 ```bash
-git clone https://github.com/CallMeNegi/ERP.git
-cd erp
+git clone git@github.com:Gerald-87/erp-frontend.git
+cd erp-frontend
 ```
 
 2. Install dependencies
