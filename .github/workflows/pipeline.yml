@@ -1,4 +1,4 @@
-name: ERP Frontend Pipeline
+name: ERP Frontend Deploy
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: self-hosted  # <- will run on your Ubuntu server
 
     steps:
       - name: Checkout code
@@ -18,13 +18,11 @@ jobs:
         with:
           node-version: 22
 
-      - name: Check versions
-        run: |
-          node -v
-          npm -v
-
       - name: Install dependencies
         run: npm install
 
-      - name: Build project
+      - name: Build frontend
         run: npm run build
+
+      - name: Restart frontend service
+        run: sudo systemctl restart erp-frontend
