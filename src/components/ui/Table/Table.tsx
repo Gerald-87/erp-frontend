@@ -230,7 +230,7 @@ function Table<T extends Record<string, any>>({
 
       {/* ── Table ── */}
       <div className="w-full overflow-x-auto custom-scrollbar">
-        <div className="max-h-[520px] overflow-y-auto min-w-full md:min-w-[800px] relative">
+        <div className="min-w-full md:min-w-[800px] relative">
           <table className="w-full min-w-full border-separate border-spacing-0">
             {/* Header */}
             <thead className="sticky top-0 z-30">

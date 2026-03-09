@@ -164,3 +164,12 @@ input[type="radio"] {
   background: var(--danger) !important;
   color: #ffffff !important;
 }
+
+ .custom-scrollbar {
+   -ms-overflow-style: none;
+   scrollbar-width: none;
+ }
+
+ .custom-scrollbar::-webkit-scrollbar {
+   display: none;
+ }
