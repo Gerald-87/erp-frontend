@@ -17,10 +17,7 @@ import {
 } from "recharts";
 
 import type { SalarySlipListItem } from "../../../api/salarySlipApi";
-import {
-  getEmployeeAdvancesPaged,
-  type EmployeeAdvanceRecord,
-} from "../../../api/advanceLoanApi";
+import { getAdditionalSalariesPaged } from "../../../api/additionalSalaryApi";
 
 const fmtZMW = (n: number) => Number(n || 0).toLocaleString("en-ZM");
 
@@ -79,6 +76,13 @@ export default function PayrollReportsDashboard({
   error,
 }: PayrollReportsDashboardProps) {
   const safeSlips = Array.isArray(slips) ? slips : [];
+
+  const [additionalSalaryLoading, setAdditionalSalaryLoading] = useState(false);
+  const [additionalSalaryError, setAdditionalSalaryError] = useState<
+    string | null
+  >(null);
+  const [additionalSalaryTotal, setAdditionalSalaryTotal] = useState(0);
+  const [additionalSalaryCount, setAdditionalSalaryCount] = useState(0);
 
   const [period, setPeriod] = useState<PeriodPreset>("last_12");
   const [customMonth, setCustomMonth] = useState<string>("");
@@ -155,6 +159,41 @@ export default function PayrollReportsDashboard({
     [],
   );
 
+  useEffect(() => {
+    let mounted = true;
+
+    const run = async () => {
+      try {
+        setAdditionalSalaryLoading(true);
+        setAdditionalSalaryError(null);
+
+        const res = await getAdditionalSalariesPaged({ page: 1, page_size: 1000 });
+        if (!mounted) return;
+
+        const records = Array.isArray(res?.records) ? res.records : [];
+        const total = records.reduce((s, r) => s + Number(r.amount ?? 0), 0);
+
+        setAdditionalSalaryCount(records.length);
+        setAdditionalSalaryTotal(total);
+      } catch (e: any) {
+        if (!mounted) return;
+        setAdditionalSalaryCount(0);
+        setAdditionalSalaryTotal(0);
+        setAdditionalSalaryError(
+          e?.message ?? "Failed to load additional salaries",
+        );
+      } finally {
+        if (!mounted) return;
+        setAdditionalSalaryLoading(false);
+      }
+    };
+
+    run();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const statusData = useMemo(() => {
     const map = filteredSlips.reduce((acc: Record<string, number>, r) => {
       const raw = String(r.status ?? "").trim();
@@ -185,50 +224,6 @@ export default function PayrollReportsDashboard({
       .slice(0, 8);
   }, [filteredSlips]);
 
-  const [advancesLoading, setAdvancesLoading] = useState(false);
-  const [advancesError, setAdvancesError] = useState<string | null>(null);
-  const [advances, setAdvances] = useState<EmployeeAdvanceRecord[]>([]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const run = async () => {
-      setAdvancesLoading(true);
-      setAdvancesError(null);
-      try {
-        const res = await getEmployeeAdvancesPaged({
-          page: 1,
-          page_size: 1000,
-        });
-        if (!mounted) return;
-        setAdvances(Array.isArray(res?.records) ? res.records : []);
-      } catch (e: any) {
-        if (!mounted) return;
-        setAdvances([]);
-        setAdvancesError(e?.message || "Failed to load advances");
-      } finally {
-        if (!mounted) return;
-        setAdvancesLoading(false);
-      }
-    };
-
-    run();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const advancesKpis = useMemo(() => {
-    const totalAdvance = advances.reduce(
-      (s, r) => s + Number(r.advance_amount ?? 0),
-      0,
-    );
-    return {
-      count: advances.length,
-      totalAdvance,
-    };
-  }, [advances]);
-
   const monthlyTrend = useMemo(() => {
     const map: Record<
       string,
@@ -237,7 +232,6 @@ export default function PayrollReportsDashboard({
         gross: number;
         deductions: number;
         net: number;
-        advances: number;
         slips: number;
       }
     > = {};
@@ -251,7 +245,6 @@ export default function PayrollReportsDashboard({
           gross: 0,
           deductions: 0,
           net: 0,
-          advances: 0,
           slips: 0,
         };
       map[key].gross += Number(r.total_earnings ?? 0);
@@ -260,25 +253,11 @@ export default function PayrollReportsDashboard({
       map[key].slips += 1;
     });
 
-    advances.forEach((r) => {
-      const key = getMonthKey(String(r.posting_date ?? "").trim()) || "Unknown";
-      if (!map[key])
-        map[key] = {
-          month: key,
-          gross: 0,
-          deductions: 0,
-          net: 0,
-          advances: 0,
-          slips: 0,
-        };
-      map[key].advances += Number(r.advance_amount ?? 0);
-    });
-
     return Object.values(map)
       .filter((r) => r.month !== "Unknown")
       .sort((a, b) => String(a.month).localeCompare(String(b.month)))
       .slice(-12);
-  }, [filteredSlips, advances]);
+  }, [filteredSlips]);
 
   const kpiCards = useMemo(
     () => [
@@ -307,17 +286,18 @@ export default function PayrollReportsDashboard({
         color: "text-primary bg-primary/10 border-[var(--primary)]/20",
       },
       {
-        label: "Total Advances",
-        value: advancesLoading
+        label: "Additional Salary",
+        value: additionalSalaryLoading
           ? "—"
-          : currencyZMW.format(advancesKpis.totalAdvance),
+          : `${currencyZMW.format(additionalSalaryTotal)} (${additionalSalaryCount.toLocaleString("en-ZM")})`,
         icon: TrendingUp,
         color: "text-success bg-success/10 border-success/20",
       },
     ],
     [
-      advancesKpis.totalAdvance,
-      advancesLoading,
+      additionalSalaryCount,
+      additionalSalaryLoading,
+      additionalSalaryTotal,
       currencyZMW,
       kpis.slipCount,
       kpis.totalDed,
@@ -369,9 +349,9 @@ export default function PayrollReportsDashboard({
         </div>
       )}
 
-      {advancesError && (
+      {additionalSalaryError && (
         <div className="bg-danger/5 border border-danger/20 text-danger rounded-lg px-4 py-3 text-sm font-semibold">
-          {advancesError}
+          {additionalSalaryError}
         </div>
       )}
 
@@ -499,11 +479,11 @@ export default function PayrollReportsDashboard({
       <div className={`${CHART_CARD_BASE} lg:col-span-2`}>
         <div>
           <div className="text-sm font-extrabold text-main">
-            Unified Monthly Trend (Net Pay, Deductions, Advances)
+            Unified Monthly Trend (Net Pay, Deductions)
           </div>
         </div>
         <div className="h-[320px] mt-4 w-full min-w-0">
-          {loading || advancesLoading ? (
+          {loading ? (
             <div className="h-full rounded-lg bg-muted/5 animate-pulse" />
           ) : monthlyTrend.length === 0 ? (
             <div className="text-sm text-muted mt-6">No data available</div>
@@ -622,21 +602,6 @@ export default function PayrollReportsDashboard({
                     r: 5,
                     strokeWidth: 0,
                     fill: "var(--primary-700)",
-                  }}
-                  yAxisId="left"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="advances"
-                  name="Advances"
-                  stroke="var(--primary-500)"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorAdv)"
-                  activeDot={{
-                    r: 5,
-                    strokeWidth: 0,
-                    fill: "var(--primary-500)",
                   }}
                   yAxisId="left"
                 />

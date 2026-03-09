@@ -7,6 +7,7 @@ import ItemsCategory from "./ItemsCategory";
 import Stock from "./Stock";
 import Import from "./Import";
 import InventoryDashboard from "./InventoryDashboard";
+import InventoryReports from "./Reports";
 
 const inventory = {
   name: "Inventory",
@@ -18,6 +19,7 @@ const inventory = {
     { id: "itemsCategory", name: "Items Category", icon: <FaBoxOpen /> },
     { id: "stock", name: "Stock", icon: <FaBoxOpen /> },
     { id: "import", name: "Import", icon: <FaBoxOpen /> },
+    { id: "reports", name: "Reports", icon: <FaChartBar /> },
   ],
   products: [
     {
@@ -78,7 +80,6 @@ const inventory = {
 
 const Inventory: React.FC = () => {
   const [activeTab, setActiveTab] = useState(inventory.defaultTab);
-  const [searchTerm, setSearchTerm] = useState("");
 
   return (
     <div className="p-6 bg-app">
@@ -96,7 +97,6 @@ const Inventory: React.FC = () => {
             key={tab.id}
             onClick={() => {
               setActiveTab(tab.id);
-              setSearchTerm("");
             }}
             className={`px-4 py-2 font-medium flex items-center gap-2 transition-colors ${
               activeTab === tab.id
@@ -112,38 +112,11 @@ const Inventory: React.FC = () => {
       {/* Content */}
       <div className="">
         {activeTab === "inventorydashboard" && <InventoryDashboard />}
-        {activeTab === "items" && (
-          <Items
-            products={inventory.products}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onAdd={() => {}}
-          />
-        )}
-        {activeTab === "itemsCategory" && (
-          <ItemsCategory
-            products={inventory.products}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onAdd={() => {}}
-          />
-        )}
-        {activeTab === "stock" && (
-          <Stock
-            products={inventory.products}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onAdd={() => {}}
-          />
-        )}
-        {activeTab === "import" && (
-          <Import
-            products={inventory.products}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onAdd={() => {}}
-          />
-        )}
+        {activeTab === "items" && <Items />}
+        {activeTab === "itemsCategory" && <ItemsCategory />}
+        {activeTab === "stock" && <Stock />}
+        {activeTab === "import" && <Import />}
+        {activeTab === "reports" && <InventoryReports />}
         {activeTab === "movements" && <Movements onAdd={() => {}} />}
       </div>
     </div>
