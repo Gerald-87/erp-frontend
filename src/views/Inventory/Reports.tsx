@@ -179,6 +179,49 @@ const InventoryReports: React.FC = () => {
 
   const totalItems = stockRowsAll.length;
 
+  const stockBalanceValue = useMemo(() => {
+    const rows = report?.stock_balance?.data;
+    if (!Array.isArray(rows) || rows.length === 0) return null;
+
+    const first = rows[0];
+
+    if (first == null) return null;
+
+    if (typeof first !== "object" || Array.isArray(first)) {
+      const sum = (rows as any[])
+        .map((v) => Number(v ?? 0))
+        .filter((n) => Number.isFinite(n))
+        .reduce((a, b) => a + b, 0);
+      return Number.isFinite(sum) ? sum : null;
+    }
+
+    const candidateKeys = ["balance_qty", "qty", "quantity", "value", "balance"];
+    const objects = rows as Record<string, any>[];
+    for (const key of candidateKeys) {
+      if (key in (objects[0] ?? {})) {
+        const sum = objects
+          .map((r) => Number(r?.[key] ?? 0))
+          .filter((n) => Number.isFinite(n))
+          .reduce((a, b) => a + b, 0);
+        return Number.isFinite(sum) ? sum : null;
+      }
+    }
+
+    const numericKeys = Object.keys(objects[0] ?? {}).filter((k) =>
+      Number.isFinite(Number(objects[0]?.[k])),
+    );
+    if (numericKeys.length === 1) {
+      const key = numericKeys[0];
+      const sum = objects
+        .map((r) => Number(r?.[key] ?? 0))
+        .filter((n) => Number.isFinite(n))
+        .reduce((a, b) => a + b, 0);
+      return Number.isFinite(sum) ? sum : null;
+    }
+
+    return null;
+  }, [report?.stock_balance?.data]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -291,20 +334,25 @@ const InventoryReports: React.FC = () => {
   const cards = useMemo(
     () => [
       {
-        title: "Stock Rows",
-        value: String(totalItems),
+        title: stockBalanceValue != null ? "Stock Balance" : "Stock Rows",
+        value:
+          stockBalanceValue != null
+            ? Number(stockBalanceValue).toLocaleString()
+            : String(totalItems),
         sub: "",
         icon: PackageSearch,
         gradient: "from-[var(--brand-blue-bottom)] to-[var(--primary)]",
       },
     ],
-    [totalItems],
+    [stockBalanceValue, totalItems],
   );
 
   const run = async () => {
     try {
       setLoading(true);
       setError(null);
+      setReport(null);
+      setMostLeastTotals([]);
       const resp = await getItemsReport({
         sales_item_code: salesItemCode,
         stock_item_code: stockItemCode,
