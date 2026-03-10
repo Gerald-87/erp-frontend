@@ -146,16 +146,33 @@ const PurchaseInvoiceView: React.FC<PurchaseInvoiceViewProps> = ({
   const items = Array.isArray(piData.items) ? piData.items : [];
   const currency = String(piData.currency ?? "").trim();
 
-  const formatUnknown = (v: unknown) => {
+  const formatAddress = (v: unknown) => {
     if (v === null || v === undefined) return "—";
     if (typeof v === "string") return v.trim() ? v : "—";
-    if (typeof v === "number") return String(v);
-    if (typeof v === "boolean") return v ? "true" : "false";
+
+    const obj = v as any;
+
+    const lines: string[] = [
+      obj?.addressTitle,
+      obj?.addressType,
+      obj?.addressLine1,
+      obj?.addressLine2,
+      [obj?.city, obj?.state].filter(Boolean).join(", "),
+      obj?.country,
+      obj?.postalCode,
+      obj?.phone,
+      obj?.email,
+    ]
+      .map((x) => String(x ?? "").trim())
+      .filter(Boolean);
+
+    if (lines.length) return lines.join("\n");
+
     try {
       const json = JSON.stringify(v, null, 2);
       return json === "{}" || json === "[]" ? "—" : json;
     } catch {
-      return String(v);
+      return "—";
     }
   };
 
@@ -312,7 +329,7 @@ const PurchaseInvoiceView: React.FC<PurchaseInvoiceViewProps> = ({
                     label="Details"
                     value={
                       <pre className="whitespace-pre-wrap break-words text-xs text-main">
-                        {formatUnknown(piData.addresses?.supplierAddress)}
+                        {formatAddress(piData.addresses?.supplierAddress)}
                       </pre>
                     }
                   />
@@ -328,7 +345,7 @@ const PurchaseInvoiceView: React.FC<PurchaseInvoiceViewProps> = ({
                     label="Details"
                     value={
                       <pre className="whitespace-pre-wrap break-words text-xs text-main">
-                        {formatUnknown(piData.addresses?.dispatchAddress)}
+                        {formatAddress(piData.addresses?.dispatchAddress)}
                       </pre>
                     }
                   />
@@ -344,7 +361,7 @@ const PurchaseInvoiceView: React.FC<PurchaseInvoiceViewProps> = ({
                     label="Details"
                     value={
                       <pre className="whitespace-pre-wrap break-words text-xs text-main">
-                        {formatUnknown(piData.addresses?.shippingAddress)}
+                        {formatAddress(piData.addresses?.shippingAddress)}
                       </pre>
                     }
                   />
