@@ -31,6 +31,7 @@ interface Purchaseinvoice {
   amount: number;
   deliveryDate: string;
   registrationType: string;
+  transactionProgress?: string;
   status?: string;
 }
 
@@ -89,7 +90,8 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
         deliveryDate: pi.deliveryDate,
         amount: pi.grandTotal,
         registrationType: pi.registrationType,
-        status: pi.transactionProgress ?? pi.status,
+        transactionProgress: pi.transactionProgress ?? pi.transaction_progress,
+        status: pi.status,
       }));
 
       setOrders(mappedInvoice);
@@ -223,31 +225,44 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
   ) => {
     e?.stopPropagation();
 
+    const currentProgress = String(
+      invoice.transactionProgress ?? invoice.status ?? "",
+    ).trim();
+
     const result = await Swal.fire({
       title: "Update Purchase Invoice Status",
       text: `Select new status for \"${invoice.pId}\"`,
       input: "select",
-      customClass: {
-        popup: "swal-theme",
-        confirmButton: "swal-theme-confirm",
-        cancelButton: "swal-theme-cancel",
-        input: "swal-theme-input",
-      },
-      buttonsStyling: false,
       inputOptions: {
-        Return: "Return",
-        Paid: "Paid",
-        "Party Paid": "Party Paid",
-        Cancelled: "Cancelled",
+        APPROVED: "APPROVED",
+        REFUNDED: "REFUNDED",
+        TRANSFERRED: "TRANSFERRED",
+        REJECTED: "REJECTED",
       },
-      inputValue:
-        invoice.status &&
-        ["Return", "Paid", "Party Paid", "Cancelled"].includes(invoice.status)
-          ? invoice.status
-          : "Paid",
+      inputValue: currentProgress && ["APPROVED", "REFUNDED", "TRANSFERRED", "REJECTED"].includes(currentProgress)
+        ? currentProgress
+        : "APPROVED",
       showCancelButton: true,
       confirmButtonText: "Update",
       cancelButtonText: "Cancel",
+      customClass: {
+        popup: "swal-theme",
+        title: "swal-theme",
+        closeButton: "swal-theme",
+        icon: "swal-theme",
+        htmlContainer: "swal-theme",
+        input: "swal-theme",
+        inputLabel: "swal-theme",
+        validationMessage: "swal-theme",
+        actions: "swal-theme",
+        confirmButton: "swal-theme-confirm",
+        denyButton: "swal-theme-cancel",
+        cancelButton: "swal-theme-cancel",
+        loader: "swal-theme",
+        footer: "swal-theme",
+        timerProgressBar: "swal-theme",
+      },
+      buttonsStyling: false,
       inputValidator: (value) => {
         if (!value) return "Status is required";
         return null;
@@ -292,16 +307,6 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
     { key: "pId", header: " PI ID", align: "left" },
     { key: "supplier", header: "Supplier", align: "left" },
     { key: "podate", header: "pi Date", align: "left" },
-    {
-      key: "status",
-      header: "Status",
-      align: "left",
-      render: (o) => (
-        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border bg-primary/10 text-primary border-primary/20">
-          {o.status ?? "-"}
-        </span>
-      ),
-    },
     {
       key: "registrationType",
       header: "Registration Type",

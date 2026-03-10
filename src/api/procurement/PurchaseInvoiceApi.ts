@@ -75,12 +75,12 @@ export async function updatePurchaseinvoiceStatus(
 ): Promise<any> {
   const payload = {
     id,
-    status: transactionProgress,
     transactionProgress,
+    status: transactionProgress,
   };
 
   const resp: AxiosResponse = await api.patch(
-    purchaseinvoiceapi.updateStatus,
+    purchaseinvoiceapi.syncAuto,
 
     payload,
   );

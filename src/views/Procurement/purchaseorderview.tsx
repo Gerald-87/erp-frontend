@@ -239,7 +239,7 @@ const PurchaseOrderView: React.FC<PurchaseOrderViewProps> = ({
         <div className="text-[11px] font-semibold text-muted uppercase tracking-wide">
           {title}
         </div>
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="mt-3 grid grid-cols-1 gap-4">
           {fields.map((f) => (
             <div key={f.label} className="flex flex-col gap-1">
               <div className="text-[11px] font-semibold text-muted uppercase tracking-wide">

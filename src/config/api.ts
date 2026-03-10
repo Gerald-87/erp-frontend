@@ -275,6 +275,7 @@ export const API = {
     create: `${ERP_BASE}/api/method/erpnext.zra_client.purchase.invoice.create_purchase_invoice`,
 
     updateStatus: `${ERP_BASE}/api/method/erpnext.zra_client.purchase.invoice.update_purchase_invoices_status`,
+    syncAuto: `${ERP_BASE}/api/method/erpnext.zra_client.purchase.invoice.sync_auto_purchase_invoices`,
     delete: `${ERP_BASE}/api/method/erpnext.zra_client.purchase.invoice.delete_purchase_invoice`,
   },
 
