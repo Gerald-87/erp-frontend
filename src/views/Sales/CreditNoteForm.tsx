@@ -460,10 +460,8 @@ const CreditNoteInvoiceLikeForm: React.FC<CreditNoteInvoiceLikeFormProps> = ({
                         const qty = Number(it.quantity) || 0;
                         const price = Number(it.price) || 0;
                         const discount = Number(it.discount) || 0;
-                        const vatRate = Number(it.vatRate) || 0;
                         const base = qty * price - discount;
-                        const taxAmount = base * (vatRate / 100);
-                        const amount = base + taxAmount;
+                        const amount = base;
                         return (
                           <tr
                             key={i}

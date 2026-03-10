@@ -4,7 +4,6 @@ import { getCompanyById } from "../api/companySetupApi";
 import type { TermSection } from "../types/termsAndCondition";
 import type { Invoice, InvoiceItem } from "../types/invoice";
 import { getItemByItemCode } from "../api/itemApi";
-import { getExchangeRate } from "../api/exchangeRateApi";
 
 import {
   DEFAULT_INVOICE_FORM,
@@ -121,49 +120,12 @@ export const useInvoiceForm = (
     const code = String(formData.currencyCode ?? "")
       .trim()
       .toUpperCase();
-    if (!code) {
-      setExchangeRateLoading(false);
-      setExchangeRateError(null);
-      setFormData((prev) => ({ ...prev, exchangeRt: "" }));
-      return;
-    }
-
-    if (code === "ZMW") {
-      setExchangeRateLoading(false);
-      setExchangeRateError(null);
-      setFormData((prev) => ({ ...prev, exchangeRt: "1" }));
-      return;
-    }
-
-    let cancelled = false;
-    setExchangeRateLoading(true);
+    setExchangeRateLoading(false);
     setExchangeRateError(null);
-
-    getExchangeRate(code)
-      .then((res) => {
-        if (cancelled) return;
-        const rate = Number(res?.exchange_rate);
-        if (!Number.isFinite(rate) || rate <= 0) {
-          setExchangeRateError("Invalid exchange rate");
-          return;
-        }
-        setFormData((prev) => ({
-          ...prev,
-          exchangeRt: String(Number(rate.toFixed(2))),
-        }));
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setExchangeRateError("Failed to load exchange rate");
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setExchangeRateLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    setFormData((prev) => ({
+      ...prev,
+      exchangeRt: code === "ZMW" ? "1" : "",
+    }));
   }, [isOpen, formData.currencyCode]);
 
   useEffect(() => {
@@ -176,7 +138,7 @@ export const useInvoiceForm = (
       .trim()
       .toUpperCase();
 
-    if (!newCurrency || newCurrency === prevCurrency) return;
+    if (!newCurrency) return;
     if (exchangeRateLoading) return;
     if (exchangeRateError) return;
 
@@ -186,8 +148,14 @@ export const useInvoiceForm = (
         : Number(String(formData.exchangeRt ?? "").trim());
     const prevRate = prevCurrency === "ZMW" ? 1 : Number(lastRateRef.current);
 
+    if (newCurrency !== "ZMW") {
+      if (!Number.isFinite(newRate) || newRate <= 0) return;
+    }
     if (!Number.isFinite(prevRate) || prevRate <= 0) return;
-    if (!Number.isFinite(newRate) || newRate <= 0) return;
+
+    const currencyChanged = newCurrency !== prevCurrency;
+    const rateChanged = Number.isFinite(newRate) && newRate > 0 && newRate !== prevRate;
+    if (!currencyChanged && !rateChanged) return;
 
     setFormData((prev) => {
       const items = prev.items.map((it) => {
@@ -196,8 +164,9 @@ export const useInvoiceForm = (
         const price = Number(it.price);
         if (!Number.isFinite(price)) return it;
 
-        const baseZmw = Number.isFinite(Number((it as any)._priceZmw))
-          ? Number((it as any)._priceZmw)
+        const storedBase = Number((it as any)._priceZmw);
+        const baseZmw = Number.isFinite(storedBase)
+          ? storedBase
           : prevCurrency === "ZMW"
             ? price
             : price * prevRate;
@@ -380,7 +349,7 @@ export const useInvoiceForm = (
           .trim()
           .toUpperCase();
         setExchangeRateError(null);
-        setExchangeRateLoading(!!next && next !== "ZMW");
+        setExchangeRateLoading(false);
         setFormData((prev) => ({
           ...prev,
           [name]: value,
