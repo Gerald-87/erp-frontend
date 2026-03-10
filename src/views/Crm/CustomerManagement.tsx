@@ -67,22 +67,25 @@ const CustomerManagement: React.FC<Props> = ({ onAdd }) => {
   const [taxCategory, setTaxCategory] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<string>("");
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = async (pageOverride?: number, pageSizeOverride?: number) => {
     try {
       setCustLoading(true);
 
       const response = await getAllCustomers(
-        page,
-        pageSize,
+        pageOverride ?? page,
+        pageSizeOverride ?? pageSize,
         taxCategory || undefined,
       );
 
       setCustomers(response.data);
       setTotalPages(response.pagination?.total_pages || 1);
       setTotalItems(response.pagination?.total || 1);
+
+      return response;
     } catch (error) {
       console.error("Error loading customers:", error);
       showApiError(error);
+      return null;
     } finally {
       setCustLoading(false);
       setInitialLoad(false);
@@ -265,11 +268,22 @@ const CustomerManagement: React.FC<Props> = ({ onAdd }) => {
     }
   };
 
-  const handleCustomerSaved = async () => {
+  const handleCustomerSaved = async (savedCustomer: CustomerDetail) => {
     setShowModal(false);
     setEditCustomer(null);
-    await fetchCustomers();
-    showSuccess(editCustomer ? "Customer updated!" : "Customer created!");
+
+    // After create/update, always jump back to the first page so the newest is visible.
+    setPage(1);
+
+    // Fetch page 1 (server side), then ensure the saved customer is pinned to the top.
+    await fetchCustomers(1);
+
+    if (savedCustomer?.id) {
+      setCustomers((prev) => {
+        const without = prev.filter((c) => c.id !== savedCustomer.id);
+        return [savedCustomer, ...without];
+      });
+    }
   };
 
   const handleRowClick = async (customer: CustomerSummary) => {

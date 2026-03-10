@@ -365,10 +365,11 @@ const CustomerModal: React.FC<{
     delete (payload as any).sameAsBilling;
 
     try {
+      let saved: any;
       if (isEditMode && initialData?.id) {
-        await updateCustomerByCustomerCode(initialData.id, payload);
+        saved = await updateCustomerByCustomerCode(initialData.id, payload);
       } else {
-        await createCustomer(payload);
+        saved = await createCustomer(payload);
       }
 
       showSuccess(
@@ -377,7 +378,12 @@ const CustomerModal: React.FC<{
           : "Customer created successfully!",
       );
 
-      onSubmit?.(payload);
+      const savedCustomer: CustomerDetail =
+        (saved?.data as CustomerDetail) ??
+        (saved as CustomerDetail) ??
+        payload;
+
+      onSubmit?.(savedCustomer);
       handleClose();
     } catch (error) {
       console.error("Customer save error:", error);
