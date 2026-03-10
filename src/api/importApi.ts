@@ -41,8 +41,20 @@ export async function correctStock(payload: any): Promise<any> {
 
 // Fetch all import items
 export async function getAllImportItems(): Promise<any> {
-  const resp: AxiosResponse = await api.get(API.import.getAll);
-  return resp.data?.data || [];
+  try {
+    const resp: AxiosResponse = await api.get(API.import.getAll);
+
+    if (resp.data?.status_code === 404) return [];
+
+    return resp.data?.data || [];
+  } catch (err: any) {
+    const status = err?.response?.status;
+    const msg = String(err?.response?.data?.message ?? "");
+    if (status === 404 && msg.toLowerCase().includes("no import items")) {
+      return [];
+    }
+    throw err;
+  }
 }
 
 // Fetch import item by ID

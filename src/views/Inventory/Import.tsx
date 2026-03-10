@@ -38,8 +38,6 @@ const Items: React.FC = () => {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const [initialLoad, setInitialLoad] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ImportItemSummary | null>(
@@ -71,12 +69,30 @@ const Items: React.FC = () => {
           }))
         : [];
       setItems(mapped);
-      // Calculate pagination
-      setTotalItems(mapped.length);
-      setTotalPages(Math.ceil(mapped.length / pageSize));
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to load import items");
+      const status = err?.response?.status;
+      const payloadStatusCode = err?.response?.data?.status_code;
+      const apiMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.exception ||
+        err?.message;
+
+      const msgLower = String(apiMsg ?? "").toLowerCase();
+      if (
+        msgLower.includes("no import items") ||
+        status === 404 ||
+        payloadStatusCode === 404
+      ) {
+        setItems([]);
+        return;
+      }
+
+      toast.error(
+        apiMsg
+          ? `Failed to load import items${status ? ` (${status})` : ""}: ${apiMsg}`
+          : "Failed to load import items",
+      );
     } finally {
       setLoading(false);
       setInitialLoad(false);
@@ -168,6 +184,19 @@ const Items: React.FC = () => {
       .includes(searchTerm.toLowerCase()),
   );
 
+  const totalFilteredItems = filteredItems.length;
+  const totalPagesForFilter = Math.max(1, Math.ceil(totalFilteredItems / pageSize));
+  const pagedItems = filteredItems.slice(
+    (page - 1) * pageSize,
+    (page - 1) * pageSize + pageSize,
+  );
+
+  useEffect(() => {
+    if (page > totalPagesForFilter) {
+      setPage(totalPagesForFilter);
+    }
+  }, [page, pageSize, totalFilteredItems, totalPagesForFilter]);
+
   /*      COLUMNS
    */
 
@@ -230,14 +259,22 @@ const Items: React.FC = () => {
       <Table
         loading={loading || initialLoad}
         columns={columns}
-        data={filteredItems}
+        data={pagedItems}
         showToolbar
         searchValue={searchTerm}
-        onSearch={setSearchTerm}
+        onSearch={(q) => {
+          setSearchTerm(q);
+          setPage(1);
+        }}
         currentPage={page}
-        totalPages={totalPages}
+        totalPages={totalPagesForFilter}
         pageSize={pageSize}
-        totalItems={totalItems}
+        totalItems={totalFilteredItems}
+        emptyMessage={
+          items.length === 0
+            ? "No import items found."
+            : "No results found."
+        }
         pageSizeOptions={[10, 25, 50, 100]}
         onPageSizeChange={(size) => {
           setPageSize(size);
