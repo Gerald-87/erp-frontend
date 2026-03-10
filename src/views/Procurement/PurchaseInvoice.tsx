@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import toast from "react-hot-toast";
+import { RefreshCcw } from "lucide-react";
 import PurchaseInvoiceView from "../../views/Procurement/PurchaseInvoiceView";
 import PurchaseInvoiceModal from "../../components/procurement/PurchaseInvoiceModal";
 // Shared UI Table Components
@@ -9,8 +9,8 @@ import ActionButton, {
 } from "../../components/ui/Table/ActionButton";
 import type { Column } from "../../components/ui/Table/type";
 import {
-  deletePurchaseInvoice,
   getPurchaseInvoices,
+  updatePurchaseinvoiceStatus,
 } from "../../api/procurement/PurchaseInvoiceApi";
 import {
   showApiError,
@@ -18,7 +18,7 @@ import {
   showLoading,
   closeSwal,
 } from "../../utils/alert";
-import { getUserFriendlyErrorMessage } from "../../utils/alert";
+import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { getPurchaseInvoiceById } from "../../api/procurement/PurchaseInvoiceApi";
@@ -31,6 +31,7 @@ interface Purchaseinvoice {
   amount: number;
   deliveryDate: string;
   registrationType: string;
+  status?: string;
 }
 
 interface PurchaseinvoicesTableProps {
@@ -88,6 +89,7 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
         deliveryDate: pi.deliveryDate,
         amount: pi.grandTotal,
         registrationType: pi.registrationType,
+        status: pi.transactionProgress ?? pi.status,
       }));
 
       setOrders(mappedInvoice);
@@ -215,59 +217,68 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
     setModalOpen(true);
   };
 
-  const handleDelete = (Invoice: Purchaseinvoice, e: React.MouseEvent) => {
-    e.stopPropagation();
-    toast.dismiss();
-    toast(
-      (t) => (
-        <div className="bg-card border border-[var(--border)] rounded-xl shadow-xl p-4 w-[320px]">
-          <div className="text-sm font-semibold text-main">
-            Delete Purchase Invoice
-          </div>
-          <div className="text-xs text-muted mt-1">
-            Are you sure you want to delete "{Invoice.pId}"?
-          </div>
-          <div className="flex items-center justify-end gap-2 mt-4">
-            <button
-              type="button"
-              onClick={() => toast.dismiss(t.id)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border)] text-main hover:bg-row-hover"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                (async () => {
-                  try {
-                    toast.dismiss(t.id);
-                    const res = await deletePurchaseInvoice(Invoice.pId);
+  const handleUpdateStatus = async (
+    invoice: Purchaseinvoice,
+    e?: React.MouseEvent,
+  ) => {
+    e?.stopPropagation();
 
-                    if (
-                      !res ||
-                      res.status_code !== 200 ||
-                      res.status !== "success"
-                    ) {
-                      toast.error(getUserFriendlyErrorMessage(res));
-                      return;
-                    }
+    const result = await Swal.fire({
+      title: "Update Purchase Invoice Status",
+      text: `Select new status for \"${invoice.pId}\"`,
+      input: "select",
+      customClass: {
+        popup: "swal-theme",
+        confirmButton: "swal-theme-confirm",
+        cancelButton: "swal-theme-cancel",
+        input: "swal-theme-input",
+      },
+      buttonsStyling: false,
+      inputOptions: {
+        Return: "Return",
+        Paid: "Paid",
+        "Party Paid": "Party Paid",
+        Cancelled: "Cancelled",
+      },
+      inputValue:
+        invoice.status &&
+        ["Return", "Paid", "Party Paid", "Cancelled"].includes(invoice.status)
+          ? invoice.status
+          : "Paid",
+      showCancelButton: true,
+      confirmButtonText: "Update",
+      cancelButtonText: "Cancel",
+      inputValidator: (value) => {
+        if (!value) return "Status is required";
+        return null;
+      },
+    });
 
-                    toast.success(res.message || "Purchase Invoice deleted");
-                    await fetchInvoice();
-                  } catch (err) {
-                    toast.error(getUserFriendlyErrorMessage(err));
-                  }
-                })();
-              }}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500 text-white hover:bg-red-600"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: Infinity },
-    );
+    if (!result.isConfirmed) return;
+
+    const transactionProgress = String(result.value ?? "");
+
+    try {
+      showLoading("Updating Purchase Invoice Status...");
+
+      const res = await updatePurchaseinvoiceStatus(
+        invoice.pId,
+        transactionProgress,
+      );
+
+      closeSwal();
+
+      if (!res || res.status !== "success") {
+        showApiError(res);
+        return;
+      }
+
+      showSuccess(res.message || "Status updated successfully");
+      await fetchInvoice();
+    } catch (error) {
+      closeSwal();
+      showApiError(error);
+    }
   };
 
   const handleCloseModal = () => setModalOpen(false);
@@ -281,6 +292,16 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
     { key: "pId", header: " PI ID", align: "left" },
     { key: "supplier", header: "Supplier", align: "left" },
     { key: "podate", header: "pi Date", align: "left" },
+    {
+      key: "status",
+      header: "Status",
+      align: "left",
+      render: (o) => (
+        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border bg-primary/10 text-primary border-primary/20">
+          {o.status ?? "-"}
+        </span>
+      ),
+    },
     {
       key: "registrationType",
       header: "Registration Type",
@@ -313,12 +334,18 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
             iconOnly
           />
 
-          <ActionButton
-            type="delete"
-            onClick={(e) => handleDelete(o, e as any)}
-            iconOnly
-            variant="danger"
-          />
+          {String(o.registrationType ?? "")
+            .trim()
+            .toLowerCase() === "automatic" && (
+            <ActionButton
+              type="custom"
+              label="Update Status"
+              icon={<RefreshCcw className="w-4 h-4" />}
+              onClick={(e) => handleUpdateStatus(o, e as any)}
+              variant="primary"
+              iconOnly
+            />
+          )}
         </ActionGroup>
       ),
     },

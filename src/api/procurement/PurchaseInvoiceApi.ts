@@ -71,11 +71,12 @@ export async function deletePurchaseInvoice(id: string | number): Promise<any> {
 // UPDATE STATUS
 export async function updatePurchaseinvoiceStatus(
   id: string | number,
-  status: string,
+  transactionProgress: string,
 ): Promise<any> {
   const payload = {
     id,
-    status,
+    status: transactionProgress,
+    transactionProgress,
   };
 
   const resp: AxiosResponse = await api.patch(
