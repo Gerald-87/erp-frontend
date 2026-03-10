@@ -253,7 +253,7 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
         closeButton: "swal-theme",
         icon: "swal-theme",
         htmlContainer: "swal-theme",
-        input: "swal-theme",
+        input: "swal-theme-input",
         inputLabel: "swal-theme",
         validationMessage: "swal-theme",
         actions: "swal-theme",
