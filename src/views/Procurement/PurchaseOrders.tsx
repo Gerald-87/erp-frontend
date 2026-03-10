@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import PurchaseOrderModal from "../../components/procurement/PurchaseOrderModal";
-import toast from "react-hot-toast";
 import PurchaseOrderView from "../../views/Procurement/purchaseorderview";
 
 // Shared UI Table Components
@@ -16,10 +15,8 @@ import {
   closeSwal,
 } from "../../utils/alert";
 import {
-  deletePurchaseOrder,
   getPurchaseOrders,
 } from "../../api/procurement/PurchaseOrderApi";
-import { getUserFriendlyErrorMessage } from "../../utils/alert";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { getPurchaseOrderById } from "../../api/procurement/PurchaseOrderApi";
@@ -136,61 +133,6 @@ const PurchaseOrdersTable: React.FC<PurchaseOrdersTableProps> = ({ onAdd }) => {
     setModalOpen(true);
   };
 
-  const handleDelete = (order: PurchaseOrder, e: React.MouseEvent) => {
-    e.stopPropagation();
-    toast.dismiss();
-    toast(
-      (t) => (
-        <div className="bg-card border border-[var(--border)] rounded-xl shadow-xl p-4 w-[320px]">
-          <div className="text-sm font-semibold text-main">
-            Delete Purchase Order
-          </div>
-          <div className="text-xs text-muted mt-1">
-            Are you sure you want to delete "{order.id}"?
-          </div>
-          <div className="flex items-center justify-end gap-2 mt-4">
-            <button
-              type="button"
-              onClick={() => toast.dismiss(t.id)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border)] text-main hover:bg-row-hover"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                (async () => {
-                  try {
-                    toast.dismiss(t.id);
-                    const res = await deletePurchaseOrder(order.id);
-
-                    if (
-                      !res ||
-                      res.status_code !== 200 ||
-                      res.status !== "success"
-                    ) {
-                      toast.error(getUserFriendlyErrorMessage(res));
-                      return;
-                    }
-
-                    toast.success(res.message || "Purchase Order deleted");
-                    await fetchOrders();
-                  } catch (err) {
-                    toast.error(getUserFriendlyErrorMessage(err));
-                  }
-                })();
-              }}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500 text-white hover:bg-red-600"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: Infinity },
-    );
-  };
-
   const handleCloseModal = () => setModalOpen(false);
   const handlePOSaved = async () => {
     await fetchOrders(); //  Refresh table
@@ -303,13 +245,6 @@ const PurchaseOrdersTable: React.FC<PurchaseOrdersTableProps> = ({ onAdd }) => {
             type="edit"
             onClick={(e) => handleEdit(o, e as any)}
             iconOnly
-          />
-
-          <ActionButton
-            type="delete"
-            onClick={(e) => handleDelete(o, e as any)}
-            iconOnly
-            variant="danger"
           />
         </ActionGroup>
       ),
