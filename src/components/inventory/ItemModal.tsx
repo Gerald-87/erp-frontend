@@ -1,6 +1,3 @@
-/* eslint-disable unused-imports/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-misused-promises */
-
 import React, { useState, useEffect, useCallback } from "react";
 import { showApiError, showLoading, closeSwal } from "../../utils/alert";
 import { toast } from "sonner";
@@ -36,7 +33,7 @@ const emptyForm: Record<string, any> = {
   preferredVendor: "",
   salesAccount: "",
   purchaseAccount: "",
-  taxCategory: " ",
+  taxCategory: "",
   taxType: "",
   taxCode: "",
   taxName: "",
@@ -63,27 +60,82 @@ const itemTypeCodeOptions = [
 ];
 
 const TAX_CONFIGS = {
-  "Non-Export": {
+  "Standard Rated 16%": {
     taxType: "Standard Rated",
+    taxName: "Standard VAT",
     taxPerct: "16",
     taxCode: "A",
-    taxDescription:
-      "Applies to products and services subject to VAT at 16% by default.",
+    taxDescription: "Standard tax rate.",
   },
-  LPO: {
-    taxType: "Zero-Rated",
+  "Minimum Taxable Value (MTV)": {
+    taxType: "Minimum Taxable Value",
+    taxName: "Minimum Taxable Value (MTV)",
     taxPerct: "0",
-    taxCode: "C2",
-    taxDescription:
-      "Applies to transactions involving customers or projects granted exemption from paying taxes.",
+    taxCode: "",
+    taxDescription: "Minimum taxable value applies.",
   },
-  Export: {
+  "Exports 0%": {
     taxType: "Export",
+    taxName: "Export VAT",
     taxPerct: "0",
     taxCode: "C1",
-    taxDescription:
-      "Applies to goods or services exported outside the country and exempt from VAT.",
+    taxDescription: "Exported goods/services.",
   },
+  "Zero-rating Local Purchases Orders 0%": {
+    taxType: "Zero-Rated",
+    taxName: "Zero-Rated VAT",
+    taxPerct: "0",
+    taxCode: "C2",
+    taxDescription: "Zero-rating for local purchase orders.",
+  },
+  "Zero-rated by nature 0%": {
+    taxType: "Zero-Rated",
+    taxName: "Zero-Rated VAT (By Nature)",
+    taxPerct: "0",
+    taxCode: "",
+    taxDescription: "Zero-rated by nature.",
+  },
+  "Exempt (No tax charge)": {
+    taxType: "Exempt",
+    taxName: "Exempt",
+    taxPerct: "0",
+    taxCode: "",
+    taxDescription: "Exempt supplies.",
+  },
+  Disbursement: {
+    taxType: "Disbursement",
+    taxName: "Disbursement",
+    taxPerct: "0",
+    taxCode: "",
+    taxDescription: "Disbursement.",
+  },
+  "Reverse VAT": {
+    taxType: "Reverse VAT",
+    taxName: "Reverse VAT",
+    taxPerct: "0",
+    taxCode: "",
+    taxDescription: "Reverse VAT applies.",
+  },
+};
+
+const TAX_CATEGORY_ALIASES: Record<string, keyof typeof TAX_CONFIGS> = {
+  "Non-Export": "Standard Rated 16%",
+  Export: "Exports 0%",
+  LPO: "Zero-rating Local Purchases Orders 0%",
+};
+
+const TAX_CATEGORY_BACKEND_MAP: Record<string, "Non-Export" | "Export" | "LPO"> = {
+  "Standard Rated 16%": "Non-Export",
+  "Minimum Taxable Value (MTV)": "Non-Export",
+  "Exports 0%": "Export",
+  "Zero-rating Local Purchases Orders 0%": "LPO",
+  "Zero-rated by nature 0%": "Non-Export",
+  "Exempt (No tax charge)": "Non-Export",
+  Disbursement: "Non-Export",
+  "Reverse VAT": "Non-Export",
+  "Non-Export": "Non-Export",
+  Export: "Export",
+  LPO: "LPO",
 };
 
 const ItemModal: React.FC<{
@@ -324,7 +376,9 @@ const ItemModal: React.FC<{
 
   // Validate Tax Details section
   const validateTaxDetails = () => {
-    if (!form.taxCategory || String(form.taxCategory).trim() === "") {
+    const raw = String(form.taxCategory ?? "").trim();
+    const backendCategory = TAX_CATEGORY_BACKEND_MAP[raw];
+    if (!raw || !backendCategory) {
       toast.error("Please select a Tax Category.");
       return false;
     }
@@ -359,6 +413,9 @@ const ItemModal: React.FC<{
         const payload = {
           ...form,
           itemTypeCode: Number(form.itemTypeCode),
+          taxCategory:
+            TAX_CATEGORY_BACKEND_MAP[String(form.taxCategory ?? "").trim()] ??
+            form.taxCategory,
         };
 
         let response;
@@ -405,6 +462,9 @@ const ItemModal: React.FC<{
         const payload = {
           ...form,
           itemTypeCode: Number(form.itemTypeCode),
+          taxCategory:
+            TAX_CATEGORY_BACKEND_MAP[String(form.taxCategory ?? "").trim()] ??
+            form.taxCategory,
         };
 
         let response;
@@ -444,7 +504,7 @@ const ItemModal: React.FC<{
     try {
       const response = await getItemGroupById(id);
       if (!response || response.status_code !== 200) return;
-      setForm((p) => ({ ...p, item_group: response.data.name }));
+      setForm((p) => ({ ...p, item_group: response.data.groupName }));
       setItemCategoryDetails(response.data);
     } catch (err) {
       showApiError("Error loading item category details");
@@ -460,12 +520,28 @@ const ItemModal: React.FC<{
 
     // Auto-populate tax details when tax category changes
     if (name === "taxCategory") {
-      const taxConfig = TAX_CONFIGS[value as keyof typeof TAX_CONFIGS];
+      if (!String(value ?? "").trim()) {
+        setForm((prev) => ({
+          ...prev,
+          [name]: "",
+          taxType: "",
+          taxCode: "",
+          taxName: "",
+          taxPerct: "",
+          taxDescription: "",
+        }));
+        return;
+      }
+
+      const resolvedKey =
+        TAX_CATEGORY_ALIASES[value] ?? (value as keyof typeof TAX_CONFIGS);
+      const taxConfig = TAX_CONFIGS[resolvedKey];
       if (taxConfig) {
         setForm((prev) => ({
           ...prev,
           [name]: value,
           taxType: taxConfig.taxType,
+          taxName: taxConfig.taxName,
           taxPerct: taxConfig.taxPerct,
           taxCode: taxConfig.taxCode,
           taxDescription: taxConfig.taxDescription,
@@ -808,18 +884,15 @@ const ItemModal: React.FC<{
                     className="w-full md:w-96 px-4 py-3 text-base border border-theme bg-card text-main rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                   >
                     <option value="">Select...</option>
-                    <option value="Non-Export">Non-Export</option>
-                    <option value="Export">Export</option>
-                    <option value="LPO">Local Purchase Order</option>
+                    {Object.keys(TAX_CONFIGS).map((k) => (
+                      <option key={k} value={k}>
+                        {k}
+                      </option>
+                    ))}
                   </select>
 
                   <p className="mt-2 text-sm text-muted">
-                    {form.taxCategory === "Non-Export" &&
-                      "Standard tax rates for domestic sales"}
-                    {form.taxCategory === "Export" &&
-                      "Zero-rated or exempt tax for international sales"}
-                    {form.taxCategory === "LPO" &&
-                      "Tax rates applicable to local purchases"}
+                    {form.taxDescription || ""}
                   </p>
                 </div>
 
@@ -827,11 +900,7 @@ const ItemModal: React.FC<{
                 <div className="bg-app rounded-lg p-6 border border-theme">
                   <h3 className="text-lg font-semibold text-main mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 bg-primary rounded-full"></span>
-                    {form.taxCategory === "Non-Export" &&
-                      "Non-Export Tax Details"}
-                    {form.taxCategory === "Export" && "Export Tax Details"}
-                    {form.taxCategory === "LPO" &&
-                      "Local Purchase Order Tax Details"}
+                    {form.taxCategory ? "Tax Details" : "Tax Details"}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
