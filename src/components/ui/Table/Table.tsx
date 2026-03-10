@@ -73,7 +73,7 @@ const SkeletonRow: React.FC<{ columnsCount: number }> = ({ columnsCount }) => (
         key={idx}
         className="px-4 sm:px-5 py-3.5 border-b border-[var(--border)]/30"
       >
-        <div className="h-4 bg-[var(--border)]/30 animate-pulse rounded" />
+        <div className="h-4 bg-row-hover/70 animate-pulse rounded" />
       </td>
     ))}
   </tr>

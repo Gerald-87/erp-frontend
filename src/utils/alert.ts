@@ -89,34 +89,7 @@ export const showSuccess = (message: string) => {
 
 /*  Loading  */
 export const showLoading = (title = "Processing...") => {
-  Swal.fire({
-    title,
-    text: "Please wait while we complete your request.",
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    showConfirmButton: false,
-    customClass: {
-      popup: "swal-theme",
-      title: "swal-theme",
-      closeButton: "swal-theme",
-      icon: "swal-theme",
-      htmlContainer: "swal-theme",
-      input: "swal-theme",
-      inputLabel: "swal-theme",
-      validationMessage: "swal-theme",
-      actions: "swal-theme",
-      confirmButton: "swal-theme-confirm",
-      denyButton: "swal-theme-cancel",
-      cancelButton: "swal-theme-cancel",
-      loader: "swal-theme",
-      footer: "swal-theme",
-      timerProgressBar: "swal-theme",
-    },
-    buttonsStyling: false,
-    didOpen: () => {
-      Swal.showLoading();
-    },
-  });
+  void title;
 };
 
 /*  Close  */

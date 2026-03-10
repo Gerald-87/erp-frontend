@@ -112,7 +112,7 @@ const CustomerManagement: React.FC<Props> = ({ onAdd }) => {
     const q = (searchTerm ?? "").trim().toLowerCase();
     const tf = (typeFilter ?? "").trim().toLowerCase();
 
-    return customers.filter((c) => {
+    const filtered = customers.filter((c) => {
       if (q) {
         const hay = [
           c.id,
@@ -137,6 +137,22 @@ const CustomerManagement: React.FC<Props> = ({ onAdd }) => {
 
       return true;
     });
+
+    const getIdSortKey = (id: unknown) => {
+      const s = String(id ?? "");
+      const match = s.match(/(\d+)\s*$/);
+      if (match) return Number(match[1]);
+      return null;
+    };
+
+    return filtered
+      .slice()
+      .sort((a, b) => {
+        const aKey = getIdSortKey(a.id);
+        const bKey = getIdSortKey(b.id);
+        if (aKey !== null && bKey !== null) return bKey - aKey;
+        return String(b.id ?? "").localeCompare(String(a.id ?? ""));
+      });
   }, [customers, searchTerm, typeFilter]);
 
   const handleExportCsv = async () => {

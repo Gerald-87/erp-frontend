@@ -1,12 +1,7 @@
 // components/modals/CustomerModal.tsx
 import React, { useState, useEffect } from "react";
 import Modal from "../ui/modal/modal";
-import {
-  showApiError,
-  showSuccess,
-  closeSwal,
-  showLoading,
-} from "../../utils/alert";
+import { showApiError, showSuccess } from "../../utils/alert";
 import { getCompanyById } from "../../api/companySetupApi";
 const companyId = import.meta.env.VITE_COMPANY_ID;
 import { Card, Button } from "../ui/modal/formComponent";
@@ -55,9 +50,6 @@ const emptyForm: CustomerDetail & { sameAsBilling: boolean } = {
   },
   sameAsBilling: false,
 };
-
-const currencyOptions = ["ZMW", "USD", "INR"];
-const customerTaxCategoryOptions = ["Export", "Non-Export", "LPO"];
 
 const CustomerModal: React.FC<{
   isOpen: boolean;
@@ -181,7 +173,7 @@ const CustomerModal: React.FC<{
     const newErrors: typeof errors = {};
 
     // Validate Type
-    if (!form.type || form.type === "") {
+    if (!form.type) {
       newErrors.type = "Type is required";
     }
 
@@ -373,17 +365,11 @@ const CustomerModal: React.FC<{
     delete (payload as any).sameAsBilling;
 
     try {
-      //  Loading
-      showLoading(isEditMode ? "Updating Customer..." : "Creating Customer...");
-
       if (isEditMode && initialData?.id) {
         await updateCustomerByCustomerCode(initialData.id, payload);
       } else {
         await createCustomer(payload);
       }
-
-      //  Success
-      closeSwal();
 
       showSuccess(
         isEditMode
@@ -395,8 +381,6 @@ const CustomerModal: React.FC<{
       handleClose();
     } catch (error) {
       console.error("Customer save error:", error);
-
-      closeSwal();
       showApiError(error);
     } finally {
       setLoading(false);
