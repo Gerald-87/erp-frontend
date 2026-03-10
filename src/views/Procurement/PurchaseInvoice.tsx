@@ -32,6 +32,7 @@ interface Purchaseinvoice {
   deliveryDate: string;
   registrationType: string;
   transactionProgress?: string;
+  syncStatus?: string | number;
   status?: string;
 }
 
@@ -91,6 +92,7 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
         amount: pi.grandTotal,
         registrationType: pi.registrationType,
         transactionProgress: pi.transactionProgress ?? pi.transaction_progress,
+        syncStatus: pi.syncStatus ?? pi.sync_status,
         status: pi.status,
       }));
 
@@ -342,6 +344,7 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
           {String(o.registrationType ?? "")
             .trim()
             .toLowerCase() === "automatic" && (
+            String(o.syncStatus ?? "").trim() !== "1" &&
             <ActionButton
               type="custom"
               label="Update Status"
