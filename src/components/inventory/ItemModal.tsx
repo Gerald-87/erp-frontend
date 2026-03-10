@@ -71,7 +71,7 @@ const TAX_CONFIGS = {
     taxType: "Minimum Taxable Value",
     taxName: "Minimum Taxable Value (MTV)",
     taxPerct: "0",
-    taxCode: "",
+    taxCode: "B",
     taxDescription: "Minimum taxable value applies.",
   },
   "Exports 0%": {
@@ -92,28 +92,28 @@ const TAX_CONFIGS = {
     taxType: "Zero-Rated",
     taxName: "Zero-Rated VAT (By Nature)",
     taxPerct: "0",
-    taxCode: "",
+    taxCode: "C3",
     taxDescription: "Zero-rated by nature.",
   },
   "Exempt (No tax charge)": {
     taxType: "Exempt",
     taxName: "Exempt",
     taxPerct: "0",
-    taxCode: "",
+    taxCode: "D",
     taxDescription: "Exempt supplies.",
   },
   Disbursement: {
     taxType: "Disbursement",
     taxName: "Disbursement",
     taxPerct: "0",
-    taxCode: "",
+    taxCode: "E",
     taxDescription: "Disbursement.",
   },
   "Reverse VAT": {
     taxType: "Reverse VAT",
     taxName: "Reverse VAT",
     taxPerct: "0",
-    taxCode: "",
+    taxCode: "RVAT",
     taxDescription: "Reverse VAT applies.",
   },
 };
@@ -884,9 +884,9 @@ const ItemModal: React.FC<{
                     className="w-full md:w-96 px-4 py-3 text-base border border-theme bg-card text-main rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                   >
                     <option value="">Select...</option>
-                    {Object.keys(TAX_CONFIGS).map((k) => (
+                    {Object.entries(TAX_CONFIGS).map(([k, cfg]) => (
                       <option key={k} value={k}>
-                        {k}
+                        {cfg.taxCode ? `${cfg.taxCode} - ${k}` : k}
                       </option>
                     ))}
                   </select>
