@@ -78,8 +78,8 @@ const Items: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleEdit = async (itemCode: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleEdit = async (itemCode: string, e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.stopPropagation();
     try {
       const res = await getItemByItemCode(itemCode);
       setEditItem(res.data);
@@ -160,21 +160,11 @@ const Items: React.FC = () => {
     { key: "itemName", header: "Name", align: "left" },
     { key: "itemGroup", header: "Category", align: "left" },
     { key: "taxCategory", header: "Tax Category", align: "left" },
-    {
-      key: "minStockLevel",
-      header: "Min Stock",
-      align: "right",
-    },
-    {
-      key: "maxStockLevel",
-      header: "Max Stock",
-      align: "right",
-    },
     { key: "preferredVendor", header: "Supplier", align: "left" },
     {
       key: "sellingPrice",
-      header: "Price",
-      align: "right",
+      header: "Selling Price",
+      align: "left",
       render: (i) => (
         <code className="text-xs px-2 py-1 rounded bg-row-hover text-main">
           ZMW {i.sellingPrice}
@@ -193,7 +183,7 @@ const Items: React.FC = () => {
             iconOnly
           />
           <ActionMenu
-            onEdit={(e) => handleEdit(i.id, e as any)}
+            onEdit={(e) => handleEdit(i.id, e)}
             onDelete={(e) => handleDeleteClick(i, e as any)}
           />
         </ActionGroup>
