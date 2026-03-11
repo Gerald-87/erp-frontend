@@ -52,7 +52,7 @@ const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop p-4" onClick={onClose}>
       <AnimatePresence>
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 30 }}
@@ -61,6 +61,7 @@ const Modal: React.FC<ModalProps> = ({
           transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
           className={`w-full ${maxWidthClasses[maxWidth]} bg-card shadow-2xl flex flex-col border border-[var(--border)] rounded-2xl overflow-hidden`}
           style={{ height }}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header with Gradient */}
           <header className="relative overflow-hidden px-4 py-3 bg-primary flex-shrink-0">

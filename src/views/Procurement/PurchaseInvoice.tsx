@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { RefreshCcw } from "lucide-react";
 import PurchaseInvoiceView from "../../views/Procurement/PurchaseInvoiceView";
 import PurchaseInvoiceModal from "../../components/procurement/PurchaseInvoiceModal";
+import UpdatePurchaseInvoiceStatusModal from "../../components/procurement/UpdatePurchaseInvoiceStatusModal";
 // Shared UI Table Components
 import Table from "../../components/ui/Table/Table";
 import ActionButton, {
@@ -10,7 +11,6 @@ import ActionButton, {
 import type { Column } from "../../components/ui/Table/type";
 import {
   getPurchaseInvoices,
-  updatePurchaseinvoiceStatus,
 } from "../../api/procurement/PurchaseInvoiceApi";
 import {
   showApiError,
@@ -18,7 +18,6 @@ import {
   showLoading,
   closeSwal,
 } from "../../utils/alert";
-import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { getPurchaseInvoiceById } from "../../api/procurement/PurchaseInvoiceApi";
@@ -52,7 +51,9 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
   const [totalItems, setTotalItems] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
+  const [selectedInvoiceForStatus, setSelectedInvoiceForStatus] = useState<Purchaseinvoice | null>(null);
   const [filters, setFilters] = useState<PurchaseInvoiceFilters>({});
 
   useEffect(() => {
@@ -226,76 +227,8 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
     e?: React.MouseEvent,
   ) => {
     e?.stopPropagation();
-
-    const currentProgress = String(
-      invoice.transactionProgress ?? invoice.status ?? "",
-    ).trim();
-
-    const result = await Swal.fire({
-      title: "Update Purchase Invoice Status",
-      text: `Select new status for \"${invoice.pId}\"`,
-      input: "select",
-      inputOptions: {
-        APPROVED: "APPROVED",
-        REFUNDED: "REFUNDED",
-        TRANSFERRED: "TRANSFERRED",
-        REJECTED: "REJECTED",
-      },
-      inputValue: currentProgress && ["APPROVED", "REFUNDED", "TRANSFERRED", "REJECTED"].includes(currentProgress)
-        ? currentProgress
-        : "APPROVED",
-      showCancelButton: true,
-      confirmButtonText: "Update",
-      cancelButtonText: "Cancel",
-      customClass: {
-        popup: "swal-theme",
-        title: "swal-theme",
-        closeButton: "swal-theme",
-        icon: "swal-theme",
-        htmlContainer: "swal-theme",
-        input: "swal-theme-input",
-        inputLabel: "swal-theme",
-        validationMessage: "swal-theme",
-        actions: "swal-theme",
-        confirmButton: "swal-theme-confirm",
-        denyButton: "swal-theme-cancel",
-        cancelButton: "swal-theme-cancel",
-        loader: "swal-theme",
-        footer: "swal-theme",
-        timerProgressBar: "swal-theme",
-      },
-      buttonsStyling: false,
-      inputValidator: (value) => {
-        if (!value) return "Status is required";
-        return null;
-      },
-    });
-
-    if (!result.isConfirmed) return;
-
-    const transactionProgress = String(result.value ?? "");
-
-    try {
-      showLoading("Updating Purchase Invoice Status...");
-
-      const res = await updatePurchaseinvoiceStatus(
-        invoice.pId,
-        transactionProgress,
-      );
-
-      closeSwal();
-
-      if (!res || res.status !== "success") {
-        showApiError(res);
-        return;
-      }
-
-      showSuccess(res.message || "Status updated successfully");
-      await fetchInvoice();
-    } catch (error) {
-      closeSwal();
-      showApiError(error);
-    }
+    setSelectedInvoiceForStatus(invoice);
+    setStatusModalOpen(true);
   };
 
   const handleCloseModal = () => setModalOpen(false);
@@ -416,6 +349,13 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
           }}
         />
       )}
+
+      <UpdatePurchaseInvoiceStatusModal
+        isOpen={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        invoice={selectedInvoiceForStatus}
+        onStatusUpdated={fetchInvoice}
+      />
     </div>
   );
 };
