@@ -15,7 +15,7 @@
 }
 
 @layer base {
-  /* UNIVERSAL DEFAULTS  */
+ 
   :root {
     --success: #22c55e;
     --danger: #dc2626;
@@ -243,7 +243,7 @@ input[type="radio"] {
    background: #4b5563 !important;
  }
 
-/* TEXT COLORS (Keep as is — already solid) */
+
 .text-success {
   color: var(--success) !important;
 }
