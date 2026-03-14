@@ -16,6 +16,7 @@ import InvoiceDetailsModal from "./InvoiceDetailsModal";
 import ActionButton, {
   ActionGroup,
 } from "../../components/ui/Table/ActionButton";
+import StatusBadge from "../../components/ui/Table/StatusBadge";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,6 +25,7 @@ import ActionButton, {
 type DebitNoteRow = {
   noteNo: string;
   invoiceNo: string;
+  zraStatus?: string;
   customer: string;
   date: string;
   timeOfInvoice?: string;
@@ -39,6 +41,7 @@ type DebitNoteRow = {
 const mapRow = (item: any): DebitNoteRow => ({
   noteNo: item.invoiceNumber,
   invoiceNo: item.receiptNumber,
+  zraStatus: String(item.zraStatus ?? item.zra_status ?? "").trim(),
   customer: item.customerName,
   date: item.dateOfInvoice,
   timeOfInvoice: item.timeOfInvoice,
@@ -254,11 +257,18 @@ const DebitNotesTable: React.FC = () => {
   const columns: Column<DebitNoteRow>[] = [
     { key: "noteNo", header: "Debit Invoice No", sortable: true },
     { key: "invoiceNo", header: "Receipt No" },
+    {
+      key: "zraStatus",
+      header: "ZRA Status",
+      align: "left",
+      sortable: false,
+      render: (r) => (r.zraStatus ? <StatusBadge status={r.zraStatus} /> : null),
+    },
     { key: "customer", header: "Customer", sortable: true },
     {
       key: "amount",
       header: "Amount",
-      align: "right",
+      align: "left",
       sortable: true,
       render: (r) => (
         <code className="text-xs px-2 py-1 rounded bg-row-hover text-main font-semibold whitespace-nowrap">
@@ -275,7 +285,7 @@ const DebitNotesTable: React.FC = () => {
     {
       key: "actions",
       header: "Actions",
-      align: "center",
+      align: "left",
       render: (r) => (
         <ActionGroup>
           <ActionButton

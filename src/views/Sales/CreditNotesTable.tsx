@@ -16,6 +16,7 @@ import InvoiceDetailsModal from "./InvoiceDetailsModal";
 import ActionButton, {
   ActionGroup,
 } from "../../components/ui/Table/ActionButton";
+import StatusBadge from "../../components/ui/Table/StatusBadge";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,6 +25,7 @@ import ActionButton, {
 type CreditNote = {
   noteNo: string;
   invoiceNo: string;
+  zraStatus?: string;
   customer: string;
   date: string;
   timeOfInvoice?: string;
@@ -97,16 +99,21 @@ const CreditNotesTable: React.FC = () => {
         searchTerm,
       );
 
-      const mappedData: CreditNote[] = resp.data.map((item: any) => ({
-        noteNo: item.invoiceNumber,
-        invoiceNo: item.receiptNumber,
-        customer: item.customerName,
-        date: item.dateOfInvoice,
-        timeOfInvoice: item.timeOfInvoice,
-        dateTime: buildDateTime(item.dateOfInvoice, item.timeOfInvoice),
-        amount: Math.abs(item.totalAmount),
-        currency: item.currency,
-      }));
+      const mappedData: CreditNote[] = resp.data.map((item: any) => {
+        const zraStatus = String(item.zraStatus ?? item.zra_status ?? "").trim();
+
+        return {
+          noteNo: item.invoiceNumber,
+          invoiceNo: item.receiptNumber,
+          zraStatus,
+          customer: item.customerName,
+          date: item.dateOfInvoice,
+          timeOfInvoice: item.timeOfInvoice,
+          dateTime: buildDateTime(item.dateOfInvoice, item.timeOfInvoice),
+          amount: Math.abs(item.totalAmount),
+          currency: item.currency,
+        };
+      });
 
       mappedData.sort(
         (a, b) => (b.dateTime?.getTime() ?? 0) - (a.dateTime?.getTime() ?? 0),
@@ -185,16 +192,21 @@ const CreditNotesTable: React.FC = () => {
           searchTerm,
         );
 
-        const mappedData: CreditNote[] = resp.data.map((item: any) => ({
-          noteNo: item.invoiceNumber,
-          invoiceNo: item.receiptNumber,
-          customer: item.customerName,
-          date: item.dateOfInvoice,
-          timeOfInvoice: item.timeOfInvoice,
-          dateTime: buildDateTime(item.dateOfInvoice, item.timeOfInvoice),
-          amount: Math.abs(item.totalAmount),
-          currency: item.currency,
-        }));
+        const mappedData: CreditNote[] = resp.data.map((item: any) => {
+          const zraStatus = String(item.zraStatus ?? item.zra_status ?? "").trim();
+
+          return {
+            noteNo: item.invoiceNumber,
+            invoiceNo: item.receiptNumber,
+            zraStatus,
+            customer: item.customerName,
+            date: item.dateOfInvoice,
+            timeOfInvoice: item.timeOfInvoice,
+            dateTime: buildDateTime(item.dateOfInvoice, item.timeOfInvoice),
+            amount: Math.abs(item.totalAmount),
+            currency: item.currency,
+          };
+        });
 
         allData = [...allData, ...mappedData];
         total = resp.pagination.total_pages;
@@ -258,12 +270,19 @@ const CreditNotesTable: React.FC = () => {
   const columns: Column<CreditNote>[] = [
     { key: "noteNo", header: "Credit Invoice No", sortable: true },
     { key: "invoiceNo", header: "Receipt No" },
+    {
+      key: "zraStatus",
+      header: "ZRA Status",
+      align: "left",
+      sortable: false,
+      render: (r) => (r.zraStatus ? <StatusBadge status={r.zraStatus} /> : null),
+    },
     { key: "customer", header: "Customer", sortable: true },
 
     {
       key: "amount",
       header: "Amount",
-      align: "right",
+      align: "left",
       sortable: true,
       render: (r) => (
         <code className="text-xs px-2 py-1 rounded bg-row-hover text-main font-semibold whitespace-nowrap">
@@ -281,7 +300,7 @@ const CreditNotesTable: React.FC = () => {
     {
       key: "actions",
       header: "Actions",
-      align: "center",
+      align: "left",
       render: (r) => (
         <ActionGroup>
           <ActionButton

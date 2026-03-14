@@ -23,7 +23,7 @@ const StockInOut: React.FC = () => {
   const [initialLoad, setInitialLoad] = useState(true);
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const pageSize = 10;
   const [searchTerm, setSearchTerm] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -122,11 +122,6 @@ const StockInOut: React.FC = () => {
         totalPages={totalPages}
         pageSize={pageSize}
         totalItems={totalItems}
-        pageSizeOptions={[10]}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setPage(1);
-        }}
         onPageChange={setPage}
         extraFilters={
           <div className="flex items-center gap-3 flex-wrap">

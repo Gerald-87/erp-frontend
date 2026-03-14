@@ -11,6 +11,7 @@ import ActionButton, {
   ActionGroup,
 } from "../../components/ui/Table/ActionButton";
 import type { Column } from "../../components/ui/Table/type";
+import StatusBadge from "../../components/ui/Table/StatusBadge";
 import { getCompanyById } from "../../api/companySetupApi";
 import type { Company } from "../../types/company";
 import {
@@ -78,8 +79,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
     try {
       setLoading(true);
 
-      // NOTE: add `search` param to getAllSalesInvoices in salesApi.ts
-      // signature: getAllSalesInvoices(page, page_size, sortBy, sortOrder, search)
+      
       const res = await getAllSalesInvoices(
         page,
         pageSize,
@@ -96,6 +96,14 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
           ? new Date(`${dateIso}T${timeIso}`)
           : new Date(dateIso);
 
+        const rawZra = String(inv.zraStatus ?? inv.zra_status ?? "").trim();
+        const zraLower = rawZra.toLowerCase();
+        const zraStatus = zraLower.includes("success") || zraLower.includes("succes")
+          ? "Success"
+          : zraLower.includes("fail")
+            ? "Failed"
+            : "Pending";
+
         return {
           invoiceNumber: inv.invoiceNumber,
           customerName: inv.customerName,
@@ -110,6 +118,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
           totalTax: inv.totalTax,
           invoiceTypeParent: inv.invoiceTypeParent,
           invoiceType: inv.invoiceType,
+          zraStatus,
         };
       });
 
@@ -167,6 +176,14 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
               ? new Date(`${dateIso}T${timeIso}`)
               : new Date(dateIso);
 
+            const rawZra = String(inv.zraStatus ?? inv.zra_status ?? "").trim();
+            const zraLower = rawZra.toLowerCase();
+            const zraStatus = zraLower.includes("success") || zraLower.includes("succes")
+              ? "Success"
+              : zraLower.includes("fail")
+                ? "Failed"
+                : "Pending";
+
             return {
               invoiceNumber: inv.invoiceNumber,
               customerName: inv.customerName,
@@ -181,6 +198,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
               totalTax: inv.totalTax,
               invoiceTypeParent: inv.invoiceTypeParent,
               invoiceType: inv.invoiceType,
+              zraStatus,
             };
           });
 
@@ -367,6 +385,13 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
       ),
     },
     {
+      key: "zraStatus",
+      header: "ZRA Status",
+      align: "left",
+      sortable: false,
+      render: (inv) => <StatusBadge status={inv.zraStatus ?? "Pending"} />,
+    },
+    {
       key: "dueDate",
       header: "Due Date",
       align: "left",
@@ -380,7 +405,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
     {
       key: "total",
       header: "Amount",
-      align: "right",
+      align: "left",
       sortable: true,
       render: (inv) => (
         <code className="text-xs px-2 py-1 rounded bg-row-hover text-main font-semibold whitespace-nowrap">
@@ -391,7 +416,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
     {
       key: "actions",
       header: "Actions",
-      align: "center",
+      align: "left",
       render: (inv) => (
         <ActionGroup>
           <ActionButton

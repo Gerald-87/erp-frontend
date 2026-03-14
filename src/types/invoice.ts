@@ -33,6 +33,7 @@ export interface InvoiceSummary {
   totalTax: string;
   invoiceTypeParent: string;
   invoiceType: string;
+  zraStatus?: string;
 }
 
 export interface Address {
