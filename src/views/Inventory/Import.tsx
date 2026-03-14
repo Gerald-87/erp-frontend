@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 
 import React, { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { getAllImportItems } from "../../api/importApi";
+import { fetchImportedItems, getAllImportItems } from "../../api/importApi";
 import { getCountryList } from "../../api/lookupApi";
 
 import ViewImportModal from "../../components/inventory/ViewImportModal";
@@ -32,6 +33,7 @@ const Items: React.FC = () => {
   const [items, setItems] = useState<ImportItemSummary[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
   const [countryNameByCode, setCountryNameByCode] = useState<
     Record<string, string>
   >({});
@@ -127,6 +129,19 @@ const Items: React.FC = () => {
     if (e) e.stopPropagation();
     setSelectedImportId(importId);
     setViewModalOpen(true);
+  };
+
+  const handleFetchImport = async () => {
+    try {
+      setFetching(true);
+      const res = await fetchImportedItems();
+      toast.success(res?.message || "Import items fetched successfully");
+      await fetchItems();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to fetch import items");
+    } finally {
+      setFetching(false);
+    }
   };
 
   const handleDeleteClick = (item: ImportItemSummary, e?: React.MouseEvent) => {
@@ -256,6 +271,19 @@ const Items: React.FC = () => {
 
   return (
     <div className="p-8">
+      <div className="flex justify-end mb-3">
+        <button
+          type="button"
+          onClick={handleFetchImport}
+          disabled={fetching}
+          className="bg-primary text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 transition-all whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <span className="inline-flex items-center gap-2">
+            {fetching && <Loader2 className="w-4 h-4 animate-spin" />}
+            {fetching ? "Fetching..." : "Fetch Import"}
+          </span>
+        </button>
+      </div>
       <Table
         loading={loading || initialLoad}
         columns={columns}

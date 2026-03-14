@@ -6,6 +6,7 @@ import Movements from "./Movements";
 import ItemsCategory from "./ItemsCategory";
 import Stock from "./Stock";
 import Import from "./Import";
+import StockInOut from "./StockInOut";
 import InventoryDashboard from "./InventoryDashboard";
 import InventoryReports from "./Reports";
 
@@ -19,6 +20,7 @@ const inventory = {
     { id: "itemsCategory", name: "Items Category", icon: <FaBoxOpen /> },
     { id: "stock", name: "Stock", icon: <FaBoxOpen /> },
     { id: "import", name: "Import", icon: <FaBoxOpen /> },
+    { id: "stockInOut", name: "Stock In & Out", icon: <FaBoxOpen /> },
     { id: "reports", name: "Reports", icon: <FaChartBar /> },
   ],
   products: [
@@ -116,6 +118,7 @@ const Inventory: React.FC = () => {
         {activeTab === "itemsCategory" && <ItemsCategory />}
         {activeTab === "stock" && <Stock />}
         {activeTab === "import" && <Import />}
+        {activeTab === "stockInOut" && <StockInOut />}
         {activeTab === "reports" && <InventoryReports />}
         {activeTab === "movements" && <Movements onAdd={() => {}} />}
       </div>

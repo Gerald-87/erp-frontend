@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { RefreshCcw } from "lucide-react";
+import { Loader2, RefreshCcw } from "lucide-react";
 import PurchaseInvoiceView from "../../views/Procurement/PurchaseInvoiceView";
 import PurchaseInvoiceModal from "../../components/procurement/PurchaseInvoiceModal";
 import UpdatePurchaseInvoiceStatusModal from "../../components/procurement/UpdatePurchaseInvoiceStatusModal";
@@ -11,6 +11,7 @@ import ActionButton, {
 import type { Column } from "../../components/ui/Table/type";
 import {
   getPurchaseInvoices,
+  fetchAutomaticPurchaseInvoices,
 } from "../../api/procurement/PurchaseInvoiceApi";
 import {
   showApiError,
@@ -44,6 +45,7 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
 }) => {
   const [orders, setOrders] = useState<Purchaseinvoice[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -108,6 +110,28 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
   useEffect(() => {
     fetchInvoice();
   }, [page, pageSize, filters]);
+
+  const handleFetchPurchaseInvoices = async () => {
+    try {
+      setFetching(true);
+      showLoading("Fetching Purchase Invoices...");
+      const res = await fetchAutomaticPurchaseInvoices();
+      closeSwal();
+
+      if (res?.status && res.status !== "success") {
+        showApiError(res);
+        return;
+      }
+
+      showSuccess(res?.message || "Purchase invoices fetched successfully");
+      await fetchInvoice();
+    } catch (err) {
+      closeSwal();
+      showApiError(err);
+    } finally {
+      setFetching(false);
+    }
+  };
 
   const handleView = async (invoice: Purchaseinvoice) => {
     try {
@@ -294,6 +318,19 @@ const PurchaseinvoicesTable: React.FC<PurchaseinvoicesTableProps> = ({
 
   return (
     <div className="p-6">
+      <div className="flex justify-end mb-3">
+        <button
+          type="button"
+          onClick={handleFetchPurchaseInvoices}
+          disabled={fetching}
+          className="bg-primary text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 transition-all whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <span className="inline-flex items-center gap-2">
+            {fetching && <Loader2 className="w-4 h-4 animate-spin" />}
+            {fetching ? "Fetching..." : "Fetch Purchase Invoice"}
+          </span>
+        </button>
+      </div>
       <Table
         columns={columns}
         data={orders}

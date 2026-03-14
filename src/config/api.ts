@@ -232,6 +232,7 @@ export const API = {
     create: `${ERP_BASE}/api/method/erpnext.zra_client.stock.stock.create_item_stock_api`,
     correct: `${ERP_BASE}/api/method/erpnext.zra_client.stock.stock.correct_stock`,
     delete: `${ERP_BASE}/api/method/erpnext.zra_client.stock.stock.delete_stock_entry`,
+    ledger: `${ERP_BASE}/api/method/erpnext.zra_client.stock.stock.get_stock_ledger`,
   },
 
   /* =========================
@@ -251,6 +252,7 @@ export const API = {
     getAll: `${ERP_BASE}/api/method/erpnext.zra_client.item.imports.api.get_all_import_items`,
     getById: `${ERP_BASE}/api/method/erpnext.zra_client.item.imports.api.get_import_item_by_id`,
     updateAutomatic: `${ERP_BASE}/api/method/erpnext.zra_client.item.imports.api.update_stock_automatic`,
+    fetchFetched: `${ERP_BASE}/api/method/erpnext.zra_client.item.imports.api.get_fetched_imported_items`,
   },
 
   /* =========================
@@ -276,6 +278,7 @@ export const API = {
 
     updateStatus: `${ERP_BASE}/api/method/erpnext.zra_client.purchase.invoice.update_purchase_invoices_status`,
     syncAuto: `${ERP_BASE}/api/method/erpnext.zra_client.purchase.invoice.sync_auto_purchase_invoices`,
+    fetchAutomatic: `${ERP_BASE}/api/method/erpnext.zra_client.purchase.invoice.get_automatic_purchase_invoice`,
     delete: `${ERP_BASE}/api/method/erpnext.zra_client.purchase.invoice.delete_purchase_invoice`,
   },
 

@@ -64,6 +64,12 @@ export async function getImportItemById(id: string): Promise<any> {
   return resp.data?.data || null;
 }
 
+// Trigger fetch from ERPNext and return response
+export async function fetchImportedItems(): Promise<any> {
+  const resp: AxiosResponse = await api.post(API.import.fetchFetched);
+  return resp.data;
+}
+
 // Update stock automatic (approve/reject import item)
 export async function updateStockAutomatic(payload: {
   id: string;

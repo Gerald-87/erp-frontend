@@ -43,6 +43,12 @@ export async function getPurchaseInvoiceById(pId: string | number) {
   return resp.data;
 }
 
+// Trigger fetch from ERPNext and return response
+export async function fetchAutomaticPurchaseInvoices(): Promise<any> {
+  const resp: AxiosResponse = await api.post(purchaseinvoiceapi.fetchAutomatic);
+  return resp.data;
+}
+
 export async function deletePurchaseInvoice(id: string | number): Promise<any> {
   try {
     const resp = await api.delete(purchaseinvoiceapi.delete, {
