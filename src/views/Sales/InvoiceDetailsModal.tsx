@@ -72,6 +72,7 @@ export type InvoiceDetails = {
   dueDate?: string;
   Receipt?: string;
   ReceiptNo?: string;
+  zraStatus?: string;
   ZraQrCode?: string;
   TotalAmount?: number;
   discountPercentage?: number;
@@ -410,6 +411,9 @@ const InvoiceDetailsModal: React.FC<Props> = ({
 
                 {!isQuoteOrProforma ? (
                   <Field label="Receipt No" value={data.ReceiptNo ?? "—"} />
+                ) : null}
+                {!isQuoteOrProforma ? (
+                  <Field label="ZRA Status" value={data.zraStatus ?? "—"} />
                 ) : null}
                 <Field
                   label="Receipt"
